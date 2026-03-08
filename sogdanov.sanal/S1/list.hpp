@@ -75,7 +75,10 @@ namespace sogdanov {
   }
   template<class T>
   LIter<T>& LIter<T>::operator++() noexcept {
-    ptr_ = ptr_->next; return *this;
+    if (ptr_) {
+      ptr_ = ptr_->next;
+    }
+    return *this;
   }
   template<class T>
   bool LIter<T>::operator==(const LIter& o) const noexcept {
@@ -97,7 +100,9 @@ namespace sogdanov {
   }
   template<class T>
   LCIter<T>& LCIter<T>::operator++() noexcept {
-    ptr_ = ptr_->next;
+    if (ptr_) {
+      ptr_ = ptr_->next;
+    }
     return *this;
   }
   template<class T>
@@ -188,6 +193,9 @@ namespace sogdanov {
   }
   template<class T>
   void List<T>::pop_front() {
+    if (empty()) {
+      return;
+    }
     Node<T>* old = head_;
     head_ = head_->next;
     delete old;
@@ -195,6 +203,9 @@ namespace sogdanov {
   }
   template<class T>
   LIter<T> List<T>::insert_after(LIter<T> pos, const T& val) {
+    if (!pos.ptr_) {
+      return end();
+    }
     Node<T>* node = new Node<T>(val, pos.ptr_->next);
     pos.ptr_->next = node;
     if (pos.ptr_ == tail_) {
@@ -205,6 +216,9 @@ namespace sogdanov {
   }
   template<class T>
   LIter<T> List<T>::insert_after(LIter<T> pos, T&& val) {
+    if (!pos.ptr_) {
+      return end();
+    }
     Node<T>* node = new Node<T>(std::move(val), pos.ptr_->next);
     pos.ptr_->next = node;
     if (pos.ptr_ == tail_) {

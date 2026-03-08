@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <limits>
 #include "list.hpp"
 namespace sogdanov {
   template<class T>
@@ -27,8 +28,9 @@ namespace sogdanov {
         }
         in.unget();
         size_t val;
-        in >> val;
-        nums_last = list_append(nums, nums_last, val);
+        if (in >> val) {
+          nums_last = list_append(nums, nums_last, val);
+        }
       }
       last = list_append(list, last,std::pair<std::string , List<size_t>>{name, \
                                                                      std::move(nums)});
@@ -78,22 +80,22 @@ namespace sogdanov {
       }
       out << '\n';
     }
-    bool is_sum = true;
-    for (auto row = transp.begin(); row != transp.end(); ++row) {
-      size_t sum = 0;
-      for (auto it = (*row).begin(); it != (*row).end(); ++it) {
-        if (sum > std::numeric)limits<size_t>::max() - *it) {
-          throw std::overflow_error("overflow error");
-        }
-        sum += *it;
-      }
-      if (!is_sum) {
-        out << ' ';
-      }
-      out << sum;
-      is_sum = false;
-    }
     if (!transp.empty()) {
+      bool is_sum = true;
+      for (auto row = transp.begin(); row != transp.end(); ++row) {
+        size_t sum = 0;
+        for (auto it = (*row).begin(); it != (*row).end(); ++it) {
+          if (sum > std::numeric_limits<size_t>::max() - *it) {
+            throw std::overflow_error("overflow error");
+          }
+          sum += *it;
+        }
+        if (!is_sum) {
+          out << ' ';
+        }
+        out << sum;
+        is_sum = false;
+      }
       out << '\n';
     }
   }
@@ -113,4 +115,5 @@ int main() {
   } catch (const std::overflow_error& e) {
     std::cerr << e.what() << '\n';
     return 1;
+  }
 }
