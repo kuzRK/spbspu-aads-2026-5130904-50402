@@ -72,3 +72,17 @@ namespace sogdanov {
   bool LIter<T>::operator==(const LIter& o) const noexcept { return ptr_ == o.ptr_; }
   template<class T>
   bool LIter<T>::operator!=(const LIter& o) const noexcept { return ptr_ != o.ptr_; }
+  template<class T>
+  LCIter<T>::LCIter() noexcept : ptr_(nullptr) {}
+  template<class T>
+  LCIter<T>::LCIter(const Node<T>* p) noexcept : ptr_(p) {}
+  template<class T>
+  LCIter<T>::LCIter(const LIter<T>& it) noexcept : ptr_(it.ptr_) {}
+  template<class T>
+  const T& LCIter<T>::operator*() const { return ptr_->data; }
+  template<class T>
+  LCIter<T>& LCIter<T>::operator++() noexcept { ptr_ = ptr_->next; return *this; }
+  template<class T>
+  bool LCIter<T>::operator==(const LCIter& o) const noexcept { return ptr_ == o.ptr_; }
+  template<class T>
+  bool LCIter<T>::operator!=(const LCIter& o) const noexcept { return ptr_ != o.ptr_; }
