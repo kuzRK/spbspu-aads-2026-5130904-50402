@@ -5,7 +5,7 @@ BOOST_AUTO_TEST_CASE(default_constructor) {
   List<int> lst;
   BOOST_TEST(lst.empty());
   BOOST_TEST(lst.size() == 0u);
-  BOOST_TEST(lst.begin() == lst.end());
+  BOOST_CHECK(lst.begin() == lst.end());
 }
 BOOST_AUTO_TEST_CASE(push_front) {
   List<int> lst;
@@ -15,13 +15,10 @@ BOOST_AUTO_TEST_CASE(push_front) {
   BOOST_TEST(lst.size() == 3u);
   BOOST_TEST(!lst.empty());
   auto it = lst.begin();
-  BOOST_TEST(*it == 1);
-  ++it;
-  BOOST_TEST(*it == 2);
-  ++it;
-  BOOST_TEST(*it == 3);
-  ++it;
-  BOOST_TEST(it == lst.end());
+  BOOST_TEST(*it == 1); ++it;
+  BOOST_TEST(*it == 2); ++it;
+  BOOST_TEST(*it == 3); ++it;
+  BOOST_CHECK(it == lst.end());
 }
 BOOST_AUTO_TEST_CASE(pop_front) {
   List<int> lst;
@@ -54,7 +51,7 @@ BOOST_AUTO_TEST_CASE(insert_after_end_returns_end) {
   List<int> lst;
   lst.push_front(1);
   auto result = lst.insert_after(lst.end(), 2);
-  BOOST_TEST(result == lst.end());
+  BOOST_CHECK(result == lst.end());
   BOOST_TEST(lst.size() == 1u);
 }
 BOOST_AUTO_TEST_CASE(clear) {
@@ -64,7 +61,7 @@ BOOST_AUTO_TEST_CASE(clear) {
   lst.clear();
   BOOST_TEST(lst.empty());
   BOOST_TEST(lst.size() == 0u);
-  BOOST_TEST(lst.begin() == lst.end());
+  BOOST_CHECK(lst.begin() == lst.end());
 }
 BOOST_AUTO_TEST_CASE(copy_constructor) {
   List<int> a;
@@ -124,7 +121,7 @@ BOOST_AUTO_TEST_CASE(const_iteration) {
   BOOST_TEST(*it == 1); ++it;
   BOOST_TEST(*it == 2); ++it;
   BOOST_TEST(*it == 3); ++it;
-  BOOST_TEST(it == clst.end());
+  BOOST_CHECK(it == clst.end());
 }
 BOOST_AUTO_TEST_CASE(iter_to_citer) {
   List<int> lst;

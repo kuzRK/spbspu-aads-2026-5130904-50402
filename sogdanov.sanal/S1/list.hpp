@@ -13,8 +13,11 @@ namespace sogdanov {
   template<class T>
   class List;
   template<class T>
+  class LCIter;
+  template<class T>
   class LIter {
     friend class List<T>;
+    friend class LCIter<T>;
     Node<T>* ptr_;
   public:
     LIter() noexcept;
@@ -27,6 +30,7 @@ namespace sogdanov {
   template<class T>
   class LCIter {
     friend class List<T>;
+    friend class LIter<T>;
     const Node<T>* ptr_;
   public:
     LCIter() noexcept;
