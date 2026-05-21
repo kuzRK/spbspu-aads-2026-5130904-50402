@@ -8,8 +8,8 @@
 namespace sogdanov
 {
 
-  using Dataset = BSTree<int, std::string>;
-  using Datasets = BSTree<std::string, Dataset>;
+  using Dataset = BSTree< int, std::string >;
+  using Datasets = BSTree< std::string, Dataset >;
 
   void cmdPrint(std::istream &in, std::ostream &out, Datasets &datasets);
   void cmdComplement(std::istream &in, std::ostream &out, Datasets &datasets);

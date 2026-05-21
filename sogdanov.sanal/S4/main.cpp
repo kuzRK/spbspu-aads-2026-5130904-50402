@@ -64,7 +64,7 @@ int main(int argc, char **argv)
       std::string value;
       if (file >> value)
       {
-        sogdanov::BSTIterator<std::string, sogdanov::Dataset> it = datasets.find(currentDataset);
+        sogdanov::BSTIterator< std::string, sogdanov::Dataset > it = datasets.find(currentDataset);
         if (it != datasets.end())
         {
           (*it).second.push(key, value);
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     else
     {
       currentDataset = token;
-      sogdanov::BSTIterator<std::string, sogdanov::Dataset> it = datasets.find(currentDataset);
+      sogdanov::BSTIterator< std::string, sogdanov::Dataset > it = datasets.find(currentDataset);
       if (it == datasets.end())
       {
         sogdanov::Dataset empty_tree;
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 
   using cmd_t = void (*)(std::istream &, std::ostream &, sogdanov::Datasets &);
 
-  sogdanov::BSTree<std::string, cmd_t> commands;
+  sogdanov::BSTree< std::string, cmd_t > commands;
 
   commands.push("print", sogdanov::cmdPrint);
   commands.push("complement", sogdanov::cmdComplement);
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   std::string cmd;
   while (std::cin >> cmd)
   {
-    sogdanov::BSTIterator<std::string, cmd_t> cmd_it = commands.find(cmd);
+    sogdanov::BSTIterator< std::string, cmd_t > cmd_it = commands.find(cmd);
 
     if (cmd_it != commands.end())
     {
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     {
       std::cout << "<INVALID COMMAND>\n";
       std::cin.clear();
-      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
   }
 }
