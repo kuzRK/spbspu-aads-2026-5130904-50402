@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   }
 
   using cmd_t = void (*)(std::istream &, std::ostream &);
-  sogdanov::HashTable<std::string, cmd_t> cmds(20);
+  sogdanov::HashTable< std::string, cmd_t > cmds(20);
 
   cmds.add("graphs", sogdanov::cmd_graphs);
   cmds.add("vertexes", sogdanov::cmd_vertexes);

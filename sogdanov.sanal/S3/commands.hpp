@@ -6,7 +6,7 @@
 
 namespace sogdanov {
 
-    template<class Iter>
+    template< class Iter >
     void sort(Iter begin, Iter end);
     void cmd_graphs(std::istream& in, std::ostream& out);
     void cmd_vertexes(std::istream& in, std::ostream& out);

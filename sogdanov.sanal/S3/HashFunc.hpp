@@ -12,11 +12,11 @@ namespace sogdanov
 
   struct XXHashFunctor
   {
-    template <class T>
+    template< class T >
     size_t operator()(const T &val) const;
   };
 
-  template <class T>
+  template< class T >
   struct EqualFunctor
   {
     bool operator()(const T &a, const T &b) const;
@@ -24,16 +24,16 @@ namespace sogdanov
 
 }
 
-template <class T>
+template< class T >
 size_t sogdanov::XXHashFunctor::operator()(const T &val) const
 {
   boost::hash2::xxhash_64 hash_algo;
   boost::hash2::hash_append(hash_algo, {}, val);
-  return static_cast<size_t>(hash_algo.result());
+  return static_cast< size_t >(hash_algo.result());
 }
 
-template <class T>
-bool sogdanov::EqualFunctor<T>::operator()(const T &a, const T &b) const
+template< class T >
+bool sogdanov::EqualFunctor< T >::operator()(const T &a, const T &b) const
 {
   return a == b;
 }

@@ -9,8 +9,8 @@
 namespace sogdanov
 {
 
-  HashTable<std::string, Graph> app_graphs(100);
-  template <class Iter>
+  HashTable< std::string, Graph > app_graphs(100);
+  template< class Iter >
   void sort(Iter begin, Iter end)
   {
     if (begin == end)
@@ -36,7 +36,7 @@ namespace sogdanov
   }
   void cmd_graphs(std::istream &, std::ostream &out)
   {
-    Vector<std::string> names;
+    Vector< std::string > names;
     for (auto it = app_graphs.begin(); it != app_graphs.end(); ++it)
     {
       names.pushBack((*it).k);
@@ -65,7 +65,7 @@ namespace sogdanov
       throw std::logic_error("Graph not found");
     }
 
-    Vector<std::string> verts = app_graphs.get(gname).get_vertices();
+    Vector< std::string > verts = app_graphs.get(gname).get_vertices();
     if (verts.isEmpty())
     {
       out << "\n";
@@ -96,17 +96,17 @@ namespace sogdanov
       throw std::logic_error("Vertex not found");
     }
 
-    Vector<std::string> dests = g.get_vertices();
+    Vector< std::string > dests = g.get_vertices();
     sort(dests.begin(), dests.end());
 
     auto &edges = g.get_edges();
     bool printed = false;
     for (size_t i = 0; i < dests.getSize(); ++i)
     {
-      std::pair<std::string, std::string> key{vname, dests[i]};
+      std::pair< std::string, std::string > key{vname, dests[i]};
       if (edges.has(key))
       {
-        Vector<size_t> w = edges.get(key);
+        Vector< size_t > w = edges.get(key);
         sort(w.begin(), w.end());
         out << dests[i];
         for (size_t j = 0; j < w.getSize(); ++j)
@@ -141,17 +141,17 @@ namespace sogdanov
       throw std::logic_error("Vertex not found");
     }
 
-    Vector<std::string> srcs = g.get_vertices();
+    Vector< std::string > srcs = g.get_vertices();
     sort(srcs.begin(), srcs.end());
 
     auto &edges = g.get_edges();
     bool printed = false;
     for (size_t i = 0; i < srcs.getSize(); ++i)
     {
-      std::pair<std::string, std::string> key{srcs[i], vname};
+      std::pair< std::string, std::string > key{srcs[i], vname};
       if (edges.has(key))
       {
-        Vector<size_t> w = edges.get(key);
+        Vector< size_t > w = edges.get(key);
         sort(w.begin(), w.end());
         out << srcs[i];
         for (size_t j = 0; j < w.getSize(); ++j)
@@ -290,7 +290,7 @@ namespace sogdanov
       throw std::logic_error("Old graph not found");
     }
 
-    Vector<std::string> target_verts;
+    Vector< std::string > target_verts;
     Graph &src = app_graphs.get(gold);
 
     for (int i = 0; i < k; ++i)
@@ -318,7 +318,7 @@ namespace sogdanov
     {
       for (size_t j = 0; j < target_verts.getSize(); ++j)
       {
-        std::pair<std::string, std::string> key{target_verts[i], target_verts[j]};
+        std::pair< std::string, std::string > key{target_verts[i], target_verts[j]};
         if (edges.has(key))
         {
           auto w = edges.get(key);

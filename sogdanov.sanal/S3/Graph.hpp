@@ -10,8 +10,8 @@ namespace sogdanov
 {
   class Graph
   {
-    Vector<std::string> vertices_;
-    HashTable<std::pair<std::string, std::string>, Vector<size_t>> edges_;
+    Vector< std::string > vertices_;
+    HashTable< std::pair< std::string, std::string >, Vector< size_t > > edges_;
     void internal_add_vertex(const std::string &v);
   public:
     Graph();
@@ -22,9 +22,9 @@ namespace sogdanov
     void add_vertex(const std::string &v);
 
     bool has_vertex(const std::string &v) const;
-    Vector<std::string> get_vertices() const;
+    Vector< std::string > get_vertices() const;
 
-    HashTable<std::pair<std::string, std::string>, Vector<size_t>> &get_edges();
+    HashTable< std::pair< std::string, std::string >, Vector< size_t > > &get_edges();
   };
 
 }

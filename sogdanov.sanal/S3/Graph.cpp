@@ -4,7 +4,9 @@
 namespace sogdanov
 {
 
-  Graph::Graph() : edges_(100) {}
+  Graph::Graph() :
+    edges_(100)
+  {}
 
   void Graph::internal_add_vertex(const std::string &v)
   {
@@ -35,10 +37,10 @@ namespace sogdanov
     tmp.internal_add_vertex(u);
     tmp.internal_add_vertex(v);
 
-    std::pair<std::string, std::string> edge_key{u, v};
+    std::pair< std::string, std::string > edge_key{u, v};
     if (!tmp.edges_.has(edge_key))
     {
-      Vector<size_t> weights;
+      Vector< size_t > weights;
       weights.pushBack(w);
       tmp.edges_.add(edge_key, weights);
     }
@@ -53,7 +55,7 @@ namespace sogdanov
   void Graph::cut(const std::string &u, const std::string &v, size_t w)
   {
     Graph tmp = *this;
-    std::pair<std::string, std::string> edge_key{u, v};
+    std::pair< std::string, std::string > edge_key{u, v};
 
     if (!tmp.edges_.has(edge_key))
     {
@@ -105,12 +107,12 @@ namespace sogdanov
     return false;
   }
 
-  Vector<std::string> Graph::get_vertices() const
+  Vector< std::string > Graph::get_vertices() const
   {
     return vertices_;
   }
 
-  HashTable<std::pair<std::string, std::string>, Vector<size_t>> &Graph::get_edges()
+  HashTable< std::pair< std::string, std::string >, Vector< size_t > > &Graph::get_edges()
   {
     return edges_;
   }
