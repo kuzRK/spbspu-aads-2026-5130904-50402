@@ -3,39 +3,26 @@
 
 #include <utility>
 
-namespace sogdanov
-{
+namespace sogdanov {
 
   template< class Key, class Value >
-  struct Node
-  {
+  struct Node {
+    Node(const Key &k, const Value &v, Node< Key, Value > *p = nullptr);
+
     std::pair< Key, Value > data;
     Node< Key, Value > *left;
     Node< Key, Value > *right;
-    Node <Key, Value > *parent;
-
-    Node(const Key &k,
-         const Value &v, Node< Key, Value > *p = nullptr);
+    Node< Key, Value > *parent;
   };
 
+  // Предварительное объявление для использования в качестве друга
   template< class Key, class Value >
-  Node< Key, Value >::Node(const Key &k,
-                           const Value &v, Node< Key, Value > *p):
-    data(k, v),
-    left(nullptr),
-    right(nullptr),
-    parent(p)
-  {}
+  class BSTConstIterator;
 
   template< class Key, class Value >
-  class BSTIterator
-  {
+  class BSTIterator {
   public:
-    Node< Key, Value > *node;
-    Node< Key, Value > *fake_leaf;
-
-    BSTIterator(Node< Key, Value > *n,
-                Node< Key, Value > *f);
+    BSTIterator(Node< Key, Value > *n, Node< Key, Value > *f);
 
     std::pair< Key, Value > &operator*() const;
 
@@ -44,15 +31,17 @@ namespace sogdanov
 
     bool operator==(const BSTIterator< Key, Value > &other) const;
     bool operator!=(const BSTIterator< Key, Value > &other) const;
+
+  private:
+    friend class BSTConstIterator< Key, Value >;
+
+    Node< Key, Value > *node;
+    Node< Key, Value > *fake_leaf;
   };
 
   template< class Key, class Value >
-  class BSTConstIterator
-  {
+  class BSTConstIterator {
   public:
-    const Node< Key, Value > *node;
-    const Node< Key, Value > *fake_leaf;
-
     BSTConstIterator(const Node< Key, Value > *n, const Node< Key, Value > *f);
     BSTConstIterator(const BSTIterator< Key, Value > &it);
 
@@ -63,14 +52,27 @@ namespace sogdanov
 
     bool operator==(const BSTConstIterator< Key, Value > &other) const;
     bool operator!=(const BSTConstIterator< Key, Value > &other) const;
+
+  private:
+    const Node< Key, Value > *node;
+    const Node< Key, Value > *fake_leaf;
   };
 
   template< class Key, class Value >
-  BSTIterator< Key, Value >::BSTIterator(Node< Key, Value > *n,
-                                         Node<Key, Value> *f):
+  Node< Key, Value >::Node(const Key &k, const Value &v, Node< Key, Value > *p):
+    data(k, v),
+    left(nullptr),
+    right(nullptr),
+    parent(p)
+  {
+  }
+
+  template< class Key, class Value >
+  BSTIterator< Key, Value >::BSTIterator(Node< Key, Value > *n, Node< Key, Value > *f):
     node(n),
     fake_leaf(f)
-  {}
+  {
+  }
 
   template< class Key, class Value >
   std::pair< Key, Value > &BSTIterator< Key, Value >::operator*() const
@@ -78,35 +80,26 @@ namespace sogdanov
     return node->data;
   }
 
-  template < class Key, class Value >
+  template< class Key, class Value >
   BSTIterator< Key, Value > &BSTIterator< Key, Value >::operator++()
   {
-    if (node == fake_leaf)
-    {
+    if (node == fake_leaf) {
       return *this;
     }
-    if (node->right != fake_leaf)
-    {
+    if (node->right != fake_leaf) {
       node = node->right;
-      while (node->left != fake_leaf)
-      {
+      while (node->left != fake_leaf) {
         node = node->left;
       }
-    }
-    else
-    {
+    } else {
       Node< Key, Value > *p = node->parent;
-      while (p != nullptr && node == p->right)
-      {
+      while (p != nullptr && node == p->right) {
         node = p;
         p = p->parent;
       }
-      if (p == nullptr)
-      {
+      if (p == nullptr) {
         node = fake_leaf;
-      }
-      else
-      {
+      } else {
         node = p;
       }
     }
@@ -134,17 +127,18 @@ namespace sogdanov
   }
 
   template< class Key, class Value >
-  BSTConstIterator< Key, Value >::BSTConstIterator(const Node< Key, Value > *n,
-                                                   const Node< Key, Value > *f):
+  BSTConstIterator< Key, Value >::BSTConstIterator(const Node< Key, Value > *n, const Node< Key, Value > *f):
     node(n),
     fake_leaf(f)
-  {}
+  {
+  }
 
   template< class Key, class Value >
   BSTConstIterator< Key, Value >::BSTConstIterator(const BSTIterator< Key, Value > &it):
     node(it.node),
     fake_leaf(it.fake_leaf)
-  {}
+  {
+  }
 
   template< class Key, class Value >
   const std::pair< Key, Value > &BSTConstIterator< Key, Value >::operator*() const
@@ -155,32 +149,23 @@ namespace sogdanov
   template< class Key, class Value >
   BSTConstIterator< Key, Value > &BSTConstIterator< Key, Value >::operator++()
   {
-    if (node == fake_leaf)
-    {
+    if (node == fake_leaf) {
       return *this;
     }
-    if (node->right != fake_leaf)
-    {
+    if (node->right != fake_leaf) {
       node = node->right;
-      while (node->left != fake_leaf)
-      {
+      while (node->left != fake_leaf) {
         node = node->left;
       }
-    }
-    else
-    {
+    } else {
       const Node< Key, Value > *p = node->parent;
-      while (p != nullptr && node == p->right)
-      {
+      while (p != nullptr && node == p->right) {
         node = p;
         p = p->parent;
       }
-      if (p == nullptr)
-      {
+      if (p == nullptr) {
         node = fake_leaf;
-      }
-      else
-      {
+      } else {
         node = p;
       }
     }

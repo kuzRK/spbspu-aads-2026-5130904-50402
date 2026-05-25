@@ -3,10 +3,10 @@
 
 #include <iostream>
 #include <string>
+
 #include "bstree.hpp"
 
-namespace sogdanov
-{
+namespace sogdanov {
 
   using Dataset = BSTree< int, std::string >;
   using Datasets = BSTree< std::string, Dataset >;
