@@ -3,16 +3,10 @@
 
 #include <cstddef>
 
-namespace sogdanov
-{
+namespace sogdanov {
 
   template< class T >
-  class HashIter
-  {
-    T *tbl_;
-    size_t cap_;
-    size_t idx_;
-
+  class HashIter {
   public:
     HashIter(T *t, size_t c, size_t i);
 
@@ -21,6 +15,11 @@ namespace sogdanov
     HashIter &operator++();
 
     T &operator*();
+
+  private:
+    T *tbl_;
+    size_t cap_;
+    size_t idx_;
   };
 
 }
@@ -37,8 +36,7 @@ sogdanov::HashIter< T >::HashIter(T *t, size_t c, size_t i):
 template< class T >
 void sogdanov::HashIter< T >::advance()
 {
-  while (idx_ < cap_ && !tbl_[idx_].is_occupied())
-  {
+  while (idx_ < cap_ && !tbl_[idx_].is_occupied()) {
     idx_++;
   }
 }

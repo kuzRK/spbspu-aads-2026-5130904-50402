@@ -1,20 +1,21 @@
-#include <boost/test/unit_test.hpp>
+#include <stdexcept>
 #include <string>
-#include "Hashtable.hpp"
 
-using namespace sogdanov;
+#include <boost/test/unit_test.hpp>
+
+#include "Hashtable.hpp"
 
 BOOST_AUTO_TEST_SUITE(HashTableTests)
 
 BOOST_AUTO_TEST_CASE(test_default_constructor)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   BOOST_CHECK_EQUAL(ht.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_add_and_size)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   ht.add("one", 1);
   BOOST_CHECK_EQUAL(ht.size(), 1);
 
@@ -24,7 +25,7 @@ BOOST_AUTO_TEST_CASE(test_add_and_size)
 
 BOOST_AUTO_TEST_CASE(test_has)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   ht.add("one", 1);
   ht.add("two", 2);
 
@@ -35,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_has)
 
 BOOST_AUTO_TEST_CASE(test_get_and_modify)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   ht.add("one", 1);
   ht.add("two", 2);
 
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test_get_and_modify)
 
 BOOST_AUTO_TEST_CASE(test_drop)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   ht.add("one", 1);
   ht.add("two", 2);
 
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test_drop)
 
 BOOST_AUTO_TEST_CASE(test_add_update_existing)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   ht.add("key", 1);
   ht.add("key", 2);
 
@@ -72,11 +73,11 @@ BOOST_AUTO_TEST_CASE(test_add_update_existing)
 
 BOOST_AUTO_TEST_CASE(test_copy_constructor)
 {
-  HashTable< std::string, int > ht1(16);
+  sogdanov::HashTable< std::string, int > ht1(16);
   ht1.add("one", 1);
   ht1.add("two", 2);
 
-  HashTable< std::string, int > ht2 = ht1;
+  sogdanov::HashTable< std::string, int > ht2 = ht1;
 
   BOOST_CHECK_EQUAL(ht2.size(), 2);
   BOOST_CHECK(ht2.has("one"));
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(test_copy_constructor)
 
 BOOST_AUTO_TEST_CASE(test_exceptions_out_of_range)
 {
-  HashTable< std::string, int > ht(16);
+  sogdanov::HashTable< std::string, int > ht(16);
   ht.add("one", 1);
 
   BOOST_CHECK_THROW(ht.get("two"), std::out_of_range);
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(test_exceptions_out_of_range)
 
 BOOST_AUTO_TEST_CASE(test_exceptions_overflow)
 {
-  HashTable< std::string, int > ht(3);
+  sogdanov::HashTable< std::string, int > ht(3);
   ht.add("one", 1);
   ht.add("two", 2);
 
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(test_exceptions_overflow)
 
 BOOST_AUTO_TEST_CASE(test_rehash)
 {
-  HashTable< std::string, int > ht(4);
+  sogdanov::HashTable< std::string, int > ht(4);
   ht.add("one", 1);
   ht.add("two", 2);
   ht.add("three", 3);
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(test_rehash)
 
 BOOST_AUTO_TEST_CASE(test_tombstone_reuse)
 {
-  HashTable< std::string, int > ht(5);
+  sogdanov::HashTable< std::string, int > ht(5);
   ht.add("one", 1);
   ht.add("two", 2);
   ht.add("three", 3);

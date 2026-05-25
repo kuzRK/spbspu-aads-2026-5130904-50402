@@ -1,39 +1,31 @@
 #ifndef HASHTABLE_HPP
 #define HASHTABLE_HPP
 
-#include "HashIter.hpp"
-#include "HashFunc.hpp"
 #include <stdexcept>
 #include <utility>
 
-namespace sogdanov
-{
-  enum class HashState
-  {
+#include "HashFunc.hpp"
+#include "HashIter.hpp"
+
+namespace sogdanov {
+
+  enum class HashState {
     EMPTY,
     OCCUPIED,
     TOMBSTONE
   };
+
   template< class Key, class Value >
-  struct HashNode
-  {
+  struct HashNode {
     Key k;
     Value v;
     HashState state = HashState::EMPTY;
 
     bool is_occupied() const;
   };
-  template< class Key, class Value, class Hash = XXHashFunctor, class Equal = EqualFunctor< Key > >
-  class HashTable
-  {
-  private:
-    HashNode< Key, Value > *table_;
-    size_t capacity_;
-    size_t size_;
-    size_t tombstones_;
-    Hash hash_fn_;
-    Equal eq_fn_;
 
+  template< class Key, class Value, class Hash = XXHashFunctor, class Equal = EqualFunctor< Key > >
+  class HashTable {
   public:
     using Iterator = HashIter< HashNode< Key, Value > >;
 
@@ -54,8 +46,18 @@ namespace sogdanov
 
     Iterator begin();
     Iterator end();
+
+  private:
+    HashNode< Key, Value > *table_;
+    size_t capacity_;
+    size_t size_;
+    size_t tombstones_;
+    Hash hash_fn_;
+    Equal eq_fn_;
   };
+
 }
+
 template< class Key, class Value >
 bool sogdanov::HashNode< Key, Value >::is_occupied() const
 {
@@ -69,8 +71,7 @@ sogdanov::HashTable< Key, Value, Hash, Equal >::HashTable(size_t cap):
   size_(0),
   tombstones_(0)
 {
-  if (cap > 0)
-  {
+  if (cap > 0) {
     rehash(cap);
   }
 }
@@ -82,13 +83,10 @@ sogdanov::HashTable< Key, Value, Hash, Equal >::HashTable(const HashTable &other
   size_(0),
   tombstones_(0)
 {
-  if (other.capacity_ > 0)
-  {
+  if (other.capacity_ > 0) {
     rehash(other.capacity_);
-    for (size_t i = 0; i < other.capacity_; ++i)
-    {
-      if (other.table_[i].state == HashState::OCCUPIED)
-      {
+    for (size_t i = 0; i < other.capacity_; ++i) {
+      if (other.table_[i].state == HashState::OCCUPIED) {
         add(other.table_[i].k, other.table_[i].v);
       }
     }
@@ -121,8 +119,7 @@ void sogdanov::HashTable< Key, Value, Hash, Equal >::swap(HashTable &other) noex
 template< class Key, class Value, class Hash, class Equal >
 void sogdanov::HashTable< Key, Value, Hash, Equal >::add(Key k, Value v)
 {
-  if (size_ + tombstones_ >= capacity_)
-  {
+  if (size_ + tombstones_ >= capacity_) {
     throw std::overflow_error("HashTable is full, manual rehash required");
   }
 
@@ -130,23 +127,18 @@ void sogdanov::HashTable< Key, Value, Hash, Equal >::add(Key k, Value v)
   size_t i = 0;
   size_t first_tombstone = capacity_;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       table_[idx].v = v;
       return;
     }
-    if (table_[idx].state == HashState::TOMBSTONE && first_tombstone == capacity_)
-    {
+    if (table_[idx].state == HashState::TOMBSTONE && first_tombstone == capacity_) {
       first_tombstone = idx;
     }
     ++i;
-    if (i > capacity_)
-    {
-      if (first_tombstone != capacity_)
-      {
+    if (i > capacity_) {
+      if (first_tombstone != capacity_) {
         break;
       }
       throw std::overflow_error("HashTable probing failed");
@@ -155,8 +147,7 @@ void sogdanov::HashTable< Key, Value, Hash, Equal >::add(Key k, Value v)
 
   size_t target_idx = (first_tombstone != capacity_) ? first_tombstone : (h + i * i) % capacity_;
 
-  if (table_[target_idx].state == HashState::TOMBSTONE)
-  {
+  if (table_[target_idx].state == HashState::TOMBSTONE) {
     tombstones_--;
   }
   table_[target_idx].k = k;
@@ -168,18 +159,15 @@ void sogdanov::HashTable< Key, Value, Hash, Equal >::add(Key k, Value v)
 template< class Key, class Value, class Hash, class Equal >
 Value sogdanov::HashTable< Key, Value, Hash, Equal >::drop(Key k)
 {
-  if (capacity_ == 0)
-  {
+  if (capacity_ == 0) {
     throw std::out_of_range("Key not found");
   }
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       Value ret = std::move(table_[idx].v);
       table_[idx].state = HashState::TOMBSTONE;
       size_--;
@@ -187,8 +175,7 @@ Value sogdanov::HashTable< Key, Value, Hash, Equal >::drop(Key k)
       return ret;
     }
     ++i;
-    if (i > capacity_)
-    {
+    if (i > capacity_) {
       break;
     }
   }
@@ -198,23 +185,19 @@ Value sogdanov::HashTable< Key, Value, Hash, Equal >::drop(Key k)
 template< class Key, class Value, class Hash, class Equal >
 bool sogdanov::HashTable< Key, Value, Hash, Equal >::has(Key k) const
 {
-  if (capacity_ == 0)
-  {
+  if (capacity_ == 0) {
     return false;
   }
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       return true;
     }
     ++i;
-    if (i > capacity_)
-    {
+    if (i > capacity_) {
       break;
     }
   }
@@ -224,23 +207,19 @@ bool sogdanov::HashTable< Key, Value, Hash, Equal >::has(Key k) const
 template< class Key, class Value, class Hash, class Equal >
 Value &sogdanov::HashTable< Key, Value, Hash, Equal >::get(Key k)
 {
-  if (capacity_ == 0)
-  {
+  if (capacity_ == 0) {
     throw std::out_of_range("Key not found");
   }
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       return table_[idx].v;
     }
     ++i;
-    if (i > capacity_)
-    {
+    if (i > capacity_) {
       break;
     }
   }
@@ -250,8 +229,7 @@ Value &sogdanov::HashTable< Key, Value, Hash, Equal >::get(Key k)
 template< class Key, class Value, class Hash, class Equal >
 void sogdanov::HashTable< Key, Value, Hash, Equal >::rehash(size_t slots)
 {
-  if (slots < size_)
-  {
+  if (slots < size_) {
     throw std::invalid_argument("New capacity too small");
   }
   HashNode< Key, Value > *old_table = table_;
@@ -262,10 +240,8 @@ void sogdanov::HashTable< Key, Value, Hash, Equal >::rehash(size_t slots)
   size_ = 0;
   tombstones_ = 0;
 
-  for (size_t i = 0; i < old_cap; ++i)
-  {
-    if (old_table[i].state == HashState::OCCUPIED)
-    {
+  for (size_t i = 0; i < old_cap; ++i) {
+    if (old_table[i].state == HashState::OCCUPIED) {
       add(old_table[i].k, old_table[i].v);
     }
   }

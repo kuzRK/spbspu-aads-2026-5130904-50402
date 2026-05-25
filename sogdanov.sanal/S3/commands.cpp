@@ -1,31 +1,29 @@
 #include "commands.hpp"
-#include "../common/Vec.hpp"
-#include "Hashtable.hpp"
-#include "Graph.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 
-namespace sogdanov
-{
+#include "../common/Vec.hpp"
+#include "Graph.hpp"
+#include "Hashtable.hpp"
+
+namespace sogdanov {
 
   HashTable< std::string, Graph > app_graphs(100);
+
   template< class Iter >
   void sort(Iter begin, Iter end)
   {
-    if (begin == end)
-    {
+    if (begin == end) {
       return;
     }
-    for (Iter i = begin + 1; i < end; ++i)
-    {
+    for (Iter i = begin + 1; i < end; ++i) {
       auto key = *i;
       Iter j = i - 1;
-      while (j >= begin && key < *j)
-      {
+      while (j >= begin && key < *j) {
         *(j + 1) = *j;
-        if (j == begin)
-        {
+        if (j == begin) {
           j--;
           break;
         }
@@ -34,21 +32,19 @@ namespace sogdanov
       *(j + 1) = key;
     }
   }
+
   void cmd_graphs(std::istream &, std::ostream &out)
   {
     Vector< std::string > names;
-    for (auto it = app_graphs.begin(); it != app_graphs.end(); ++it)
-    {
+    for (auto it = app_graphs.begin(); it != app_graphs.end(); ++it) {
       names.pushBack((*it).k);
     }
-    if (names.isEmpty())
-    {
+    if (names.isEmpty()) {
       out << "\n";
       return;
     }
     sort(names.begin(), names.end());
-    for (size_t i = 0; i < names.getSize(); ++i)
-    {
+    for (size_t i = 0; i < names.getSize(); ++i) {
       out << names[i] << "\n";
     }
   }
@@ -56,43 +52,37 @@ namespace sogdanov
   void cmd_vertexes(std::istream &in, std::ostream &out)
   {
     std::string gname;
-    if (!(in >> gname))
-    {
+    if (!(in >> gname)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (!app_graphs.has(gname))
-    {
+    if (!app_graphs.has(gname)) {
       throw std::logic_error("Graph not found");
     }
 
     Vector< std::string > verts = app_graphs.get(gname).get_vertices();
-    if (verts.isEmpty())
-    {
+    if (verts.isEmpty()) {
       out << "\n";
       return;
     }
     sort(verts.begin(), verts.end());
-    for (size_t i = 0; i < verts.getSize(); ++i)
-    {
+    for (size_t i = 0; i < verts.getSize(); ++i) {
       out << verts[i] << "\n";
     }
   }
 
   void cmd_outbound(std::istream &in, std::ostream &out)
   {
-    std::string gname, vname;
-    if (!(in >> gname >> vname))
-    {
+    std::string gname;
+    std::string vname;
+    if (!(in >> gname >> vname)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (!app_graphs.has(gname))
-    {
+    if (!app_graphs.has(gname)) {
       throw std::logic_error("Graph not found");
     }
 
     Graph &g = app_graphs.get(gname);
-    if (!g.has_vertex(vname))
-    {
+    if (!g.has_vertex(vname)) {
       throw std::logic_error("Vertex not found");
     }
 
@@ -101,43 +91,37 @@ namespace sogdanov
 
     auto &edges = g.get_edges();
     bool printed = false;
-    for (size_t i = 0; i < dests.getSize(); ++i)
-    {
+    for (size_t i = 0; i < dests.getSize(); ++i) {
       std::pair< std::string, std::string > key{vname, dests[i]};
-      if (edges.has(key))
-      {
+      if (edges.has(key)) {
         Vector< size_t > w = edges.get(key);
         sort(w.begin(), w.end());
         out << dests[i];
-        for (size_t j = 0; j < w.getSize(); ++j)
-        {
+        for (size_t j = 0; j < w.getSize(); ++j) {
           out << " " << w[j];
         }
         out << "\n";
         printed = true;
       }
     }
-    if (!printed)
-    {
+    if (!printed) {
       out << "\n";
     }
   }
 
   void cmd_inbound(std::istream &in, std::ostream &out)
   {
-    std::string gname, vname;
-    if (!(in >> gname >> vname))
-    {
+    std::string gname;
+    std::string vname;
+    if (!(in >> gname >> vname)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (!app_graphs.has(gname))
-    {
+    if (!app_graphs.has(gname)) {
       throw std::logic_error("Graph not found");
     }
 
     Graph &g = app_graphs.get(gname);
-    if (!g.has_vertex(vname))
-    {
+    if (!g.has_vertex(vname)) {
       throw std::logic_error("Vertex not found");
     }
 
@@ -146,38 +130,34 @@ namespace sogdanov
 
     auto &edges = g.get_edges();
     bool printed = false;
-    for (size_t i = 0; i < srcs.getSize(); ++i)
-    {
+    for (size_t i = 0; i < srcs.getSize(); ++i) {
       std::pair< std::string, std::string > key{srcs[i], vname};
-      if (edges.has(key))
-      {
+      if (edges.has(key)) {
         Vector< size_t > w = edges.get(key);
         sort(w.begin(), w.end());
         out << srcs[i];
-        for (size_t j = 0; j < w.getSize(); ++j)
-        {
+        for (size_t j = 0; j < w.getSize(); ++j) {
           out << " " << w[j];
         }
         out << "\n";
         printed = true;
       }
     }
-    if (!printed)
-    {
+    if (!printed) {
       out << "\n";
     }
   }
 
   void cmd_bind(std::istream &in, std::ostream &)
   {
-    std::string gname, u, v;
+    std::string gname;
+    std::string u;
+    std::string v;
     size_t w;
-    if (!(in >> gname >> u >> v >> w))
-    {
+    if (!(in >> gname >> u >> v >> w)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (!app_graphs.has(gname))
-    {
+    if (!app_graphs.has(gname)) {
       throw std::logic_error("Graph not found");
     }
     app_graphs.get(gname).bind(u, v, w);
@@ -185,14 +165,14 @@ namespace sogdanov
 
   void cmd_cut(std::istream &in, std::ostream &)
   {
-    std::string gname, u, v;
+    std::string gname;
+    std::string u;
+    std::string v;
     size_t w;
-    if (!(in >> gname >> u >> v >> w))
-    {
+    if (!(in >> gname >> u >> v >> w)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (!app_graphs.has(gname))
-    {
+    if (!app_graphs.has(gname)) {
       throw std::logic_error("Graph not found");
     }
     app_graphs.get(gname).cut(u, v, w);
@@ -202,21 +182,17 @@ namespace sogdanov
   {
     std::string gname;
     int k;
-    if (!(in >> gname >> k))
-    {
+    if (!(in >> gname >> k)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (app_graphs.has(gname))
-    {
+    if (app_graphs.has(gname)) {
       throw std::logic_error("Graph already exists");
     }
 
     Graph new_g;
-    for (int i = 0; i < k; ++i)
-    {
+    for (int i = 0; i < k; ++i) {
       std::string v;
-      if (!(in >> v))
-      {
+      if (!(in >> v)) {
         throw std::invalid_argument("Invalid args");
       }
       new_g.add_vertex(v);
@@ -226,17 +202,16 @@ namespace sogdanov
 
   void cmd_merge(std::istream &in, std::ostream &)
   {
-    std::string gnew, g1, g2;
-    if (!(in >> gnew >> g1 >> g2))
-    {
+    std::string gnew;
+    std::string g1;
+    std::string g2;
+    if (!(in >> gnew >> g1 >> g2)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (app_graphs.has(gnew))
-    {
+    if (app_graphs.has(gnew)) {
       throw std::logic_error("New graph already exists");
     }
-    if (!app_graphs.has(g1) || !app_graphs.has(g2))
-    {
+    if (!app_graphs.has(g1) || !app_graphs.has(g2)) {
       throw std::logic_error("Source graph not found");
     }
 
@@ -245,28 +220,25 @@ namespace sogdanov
     Graph &src2 = app_graphs.get(g2);
 
     auto v1 = src1.get_vertices();
-    for (size_t i = 0; i < v1.getSize(); ++i)
-    {
+    for (size_t i = 0; i < v1.getSize(); ++i) {
       merged.add_vertex(v1[i]);
     }
 
     auto v2 = src2.get_vertices();
-    for (size_t i = 0; i < v2.getSize(); ++i)
-    {
+    for (size_t i = 0; i < v2.getSize(); ++i) {
       merged.add_vertex(v2[i]);
     }
 
     auto copy_edges = [&](Graph &src)
     {
       auto &edges = src.get_edges();
-      for (auto it = edges.begin(); it != edges.end(); ++it)
-      {
-        for (size_t i = 0; i < (*it).v.getSize(); ++i)
-        {
+      for (auto it = edges.begin(); it != edges.end(); ++it) {
+        for (size_t i = 0; i < (*it).v.getSize(); ++i) {
           merged.bind((*it).k.first, (*it).k.second, (*it).v[i]);
         }
       }
     };
+
     copy_edges(src1);
     copy_edges(src2);
 
@@ -275,55 +247,45 @@ namespace sogdanov
 
   void cmd_extract(std::istream &in, std::ostream &)
   {
-    std::string gnew, gold;
+    std::string gnew;
+    std::string gold;
     int k;
-    if (!(in >> gnew >> gold >> k))
-    {
+    if (!(in >> gnew >> gold >> k)) {
       throw std::invalid_argument("Invalid args");
     }
-    if (app_graphs.has(gnew))
-    {
+    if (app_graphs.has(gnew)) {
       throw std::logic_error("New graph already exists");
     }
-    if (!app_graphs.has(gold))
-    {
+    if (!app_graphs.has(gold)) {
       throw std::logic_error("Old graph not found");
     }
 
     Vector< std::string > target_verts;
     Graph &src = app_graphs.get(gold);
 
-    for (int i = 0; i < k; ++i)
-    {
+    for (int i = 0; i < k; ++i) {
       std::string v;
-      if (!(in >> v))
-      {
+      if (!(in >> v)) {
         throw std::invalid_argument("Invalid args");
       }
-      if (!src.has_vertex(v))
-      {
+      if (!src.has_vertex(v)) {
         throw std::logic_error("Vertex not in old graph");
       }
       target_verts.pushBack(v);
     }
 
     Graph extracted;
-    for (size_t i = 0; i < target_verts.getSize(); ++i)
-    {
+    for (size_t i = 0; i < target_verts.getSize(); ++i) {
       extracted.add_vertex(target_verts[i]);
     }
 
     auto &edges = src.get_edges();
-    for (size_t i = 0; i < target_verts.getSize(); ++i)
-    {
-      for (size_t j = 0; j < target_verts.getSize(); ++j)
-      {
+    for (size_t i = 0; i < target_verts.getSize(); ++i) {
+      for (size_t j = 0; j < target_verts.getSize(); ++j) {
         std::pair< std::string, std::string > key{target_verts[i], target_verts[j]};
-        if (edges.has(key))
-        {
+        if (edges.has(key)) {
           auto w = edges.get(key);
-          for (size_t wi = 0; wi < w.getSize(); ++wi)
-          {
+          for (size_t wi = 0; wi < w.getSize(); ++wi) {
             extracted.bind(key.first, key.second, w[wi]);
           }
         }
@@ -335,48 +297,40 @@ namespace sogdanov
   void load_file(const std::string &filename)
   {
     std::ifstream file(filename);
-    if (!file.is_open())
-    {
+    if (!file.is_open()) {
       throw std::runtime_error("Could not open file");
     }
 
     std::string line;
-    while (std::getline(file, line))
-    {
-      if (line.empty())
-      {
+    while (std::getline(file, line)) {
+      if (line.empty()) {
         continue;
       }
 
       std::istringstream iss(line);
       std::string gname;
       int edges_count;
-      if (!(iss >> gname >> edges_count))
-      {
+      if (!(iss >> gname >> edges_count)) {
         continue;
       }
 
       Graph g;
-      for (int i = 0; i < edges_count; ++i)
-      {
-        std::string u, v;
+      for (int i = 0; i < edges_count; ++i) {
+        std::string u;
+        std::string v;
         size_t w;
-        while (std::getline(file, line))
-        {
-          if (!line.empty())
-          {
+        while (std::getline(file, line)) {
+          if (!line.empty()) {
             break;
           }
         }
 
         std::istringstream edge_iss(line);
-        if (edge_iss >> u >> v >> w)
-        {
+        if (edge_iss >> u >> v >> w) {
           g.bind(u, v, w);
         }
       }
       app_graphs.add(gname, g);
     }
   }
-
 }
