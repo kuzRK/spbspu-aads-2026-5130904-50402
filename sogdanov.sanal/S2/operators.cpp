@@ -1,20 +1,33 @@
 #include "operators.hpp"
-#include "stack.hpp"
+
 #include <climits>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
-#include <climits>
-size_t sogdanov::getOp(char op) {
-  if (op == '^') return 1;
-  if (op == '+' || op == '-') return 2;
-  if (op == '*' || op == '/' || op == '%') return 3;
+
+#include "stack.hpp"
+
+size_t sogdanov::getOp(char op)
+{
+  if (op == '^') {
+    return 1;
+  }
+  if (op == '+' || op == '-') {
+    return 2;
+  }
+  if (op == '*' || op == '/' || op == '%') {
+    return 3;
+  }
   return 0;
 }
-bool sogdanov::isOp(char c) {
+
+bool sogdanov::isOp(char c)
+{
   return getOp(c) > 0;
 }
-long long sogdanov::applyOp(char op, long long a, long long b) {
+
+long long sogdanov::applyOp(char op, long long a, long long b)
+{
   if (op == '+') {
     if (a > 0 && b > LLONG_MAX - a) {
       throw std::runtime_error("overflow");
@@ -54,24 +67,27 @@ long long sogdanov::applyOp(char op, long long a, long long b) {
     if (b == 0) {
       throw std::runtime_error("Division by zero");
     }
-  return a / b;
+    return a / b;
   }
   if (op == '%') {
     if (b == 0) {
       throw std::runtime_error("Division by zero");
     }
-  return ((a % b) + b) % b;
+    return ((a % b) + b) % b;
   }
   if (op == '^') {
     return a ^ b;
   }
   throw std::runtime_error("unknown operator");
- }
-sogdanov::Queue<std::string> sogdanov::convertToPostfix(const std::string & line) {
-  Queue< std::string > output;
-  Stack< std::string > ops;
+}
+
+sogdanov::Queue< std::string > sogdanov::convertToPostfix(const std::string &line)
+{
+  sogdanov::Queue< std::string > output;
+  sogdanov::Stack< std::string > ops;
   size_t i = 0;
   const size_t n = line.size();
+
   while (i < n) {
     while (i < n && line[i] == ' ') {
       ++i;
@@ -82,8 +98,9 @@ sogdanov::Queue<std::string> sogdanov::convertToPostfix(const std::string & line
     }
     std::string tok = line.substr(i, j - i);
     i = j;
+
     if (tok == "(") {
-    ops.push(tok);
+      ops.push(tok);
     } else if (tok == ")") {
       while (!ops.empty() && ops.top() != "(") {
         output.push(ops.top());
@@ -93,17 +110,18 @@ sogdanov::Queue<std::string> sogdanov::convertToPostfix(const std::string & line
         throw std::runtime_error("mismatched parentheses");
       }
       ops.pop();
-      } else if (tok.size() == 1 && isOp(tok[0])) {
-        while (!ops.empty() && ops.top() != "(" && isOp(ops.top()[0])
-                                             && getOp(ops.top()[0]) >= getOp(tok[0])) {
-          output.push(ops.top());
-          ops.pop();
-        }
-        ops.push(tok);
-      } else {
-        output.push(tok);
+    } else if (tok.size() == 1 && isOp(tok[0])) {
+      while (!ops.empty() && ops.top() != "(" && isOp(ops.top()[0])
+          && getOp(ops.top()[0]) >= getOp(tok[0])) {
+        output.push(ops.top());
+        ops.pop();
       }
+      ops.push(tok);
+    } else {
+      output.push(tok);
+    }
   }
+
   while (!ops.empty()) {
     if (ops.top() == "(") {
       throw std::runtime_error("mismatched parentheses");
@@ -113,11 +131,16 @@ sogdanov::Queue<std::string> sogdanov::convertToPostfix(const std::string & line
   }
   return output;
 }
-long long sogdanov::calculatePostfix(Queue<std::string>& postfix) {
-  Stack<long long> eval;
+
+long long sogdanov::calculatePostfix(sogdanov::Queue< std::string > &postfix)
+{
+  sogdanov::Stack< long long > eval;
+
   while (!postfix.empty()) {
     std::string tok = postfix.front();
+    postfix.front();
     postfix.pop();
+
     if (tok.size() == 1 && isOp(tok[0])) {
       if (eval.size() < 2) {
         throw std::runtime_error("invalid expression");
@@ -132,7 +155,11 @@ long long sogdanov::calculatePostfix(Queue<std::string>& postfix) {
         throw std::runtime_error("empty token");
       }
       size_t k = 0;
-      bool neg = (tok[k] == '-') ? (++k, true) : false;
+      bool neg = false;
+      if (tok[k] == '-') {
+        ++k;
+        neg = true;
+      }
       if (k == tok.size()) {
         throw std::runtime_error("invalid token: " + tok);
       }
@@ -146,6 +173,7 @@ long long sogdanov::calculatePostfix(Queue<std::string>& postfix) {
       eval.push(neg ? -r : r);
     }
   }
+
   if (eval.size() != 1) {
     throw std::runtime_error("invalid expression");
   }
@@ -153,7 +181,9 @@ long long sogdanov::calculatePostfix(Queue<std::string>& postfix) {
   eval.pop();
   return result;
 }
-long long sogdanov::evaluate(const std::string & line) {
-  Queue<std::string> postfix = convertToPostfix(line);
+
+long long sogdanov::evaluate(const std::string &line)
+{
+  sogdanov::Queue< std::string > postfix = convertToPostfix(line);
   return calculatePostfix(postfix);
 }
