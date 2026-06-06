@@ -58,7 +58,7 @@ void sogdanov::showDict(std::istream& in, std::ostream& out, HashTable< std::str
   }
 }
 
-void sogdanov::dropDict(std::istream& in, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
+void sogdanov::dropDict(std::istream& in, std::ostream&, HashTable< std::string, Dictionary >& dicts)
 {
   std::string name;
   in >> name;
@@ -66,7 +66,7 @@ void sogdanov::dropDict(std::istream& in, std::ostream& out, HashTable< std::str
   dicts.remove(name);
 }
 
-void sogdanov::addWord(std::istream& in, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
+void sogdanov::addWord(std::istream& in, std::ostream&, HashTable< std::string, Dictionary >& dicts)
 {
   std::string name;
   std::string eng;
@@ -82,7 +82,7 @@ void sogdanov::addWord(std::istream& in, std::ostream& out, HashTable< std::stri
   dict.addWord(eng, rus, pos, form);
 }
 
-void sogdanov::removeWord(std::istream& in, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
+void sogdanov::removeWord(std::istream& in, std::ostream&, HashTable< std::string, Dictionary >& dicts)
 {
   std::string name;
   std::string eng;
@@ -161,7 +161,7 @@ void sogdanov::findByPos(std::istream& in, std::ostream& out, HashTable< std::st
   }
 }
 
-void sogdanov::mergeDicts(std::istream& in, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
+void sogdanov::mergeDicts(std::istream& in, std::ostream&, HashTable< std::string, Dictionary >& dicts)
 {
   std::string new_name;
   std::string name1;
@@ -247,7 +247,7 @@ void sogdanov::loadDict(std::istream& in, std::ostream& out, HashTable< std::str
   out << "<LOADED: " << filename << " -> " << name << ">\n";
 }
 
-void sogdanov::listDicts(std::istream& in, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
+void sogdanov::listDicts(std::istream&, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
 {
   Vector< std::string > keys = dicts.getKeys();
   out << "<DICTIONARIES: " << keys.getSize() << ">\n";
@@ -382,7 +382,7 @@ void sogdanov::demistifyWords(std::istream& in, std::ostream& out, HashTable< st
   out << "<DEMISTIFIED: " << found_count << " of " << total_count << " words found>\n";
 }
 
-void sogdanov::complementDicts(std::istream& in, std::ostream& out, HashTable< std::string, Dictionary >& dicts)
+void sogdanov::complementDicts(std::istream& in, std::ostream&, HashTable< std::string, Dictionary >& dicts)
 {
   std::string new_name;
   std::string name1;
