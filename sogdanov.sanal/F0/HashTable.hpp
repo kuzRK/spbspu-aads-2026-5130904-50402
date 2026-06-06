@@ -9,9 +9,6 @@
 
 namespace sogdanov {
 
-  template< class T >
-  class Vec;
-
   template< class Key, class Value >
   class HashTable {
   public:
@@ -47,8 +44,8 @@ namespace sogdanov {
     void remove(const Key& key);
     std::size_t getSize() const;
 
-    Vec< Key > getKeys() const;
-    Vec< Entry > getEntries() const;
+    sogdanov::Vector< Key > getKeys() const;
+    sogdanov::Vector< Entry > getEntries() const;
     void clear();
 
   private:
@@ -62,20 +59,21 @@ namespace sogdanov {
   };
 
   template< class Key, class Value >
-  HashTable< Key, Value >::Node::Node():
+  HashTable< Key, Value >::Node::Node() :
     state(State::EMPTY)
   {
   }
 
   template< class Key, class Value >
-  HashTable< Key, Value >::HashTable():
+  HashTable< Key, Value >::HashTable() :
     table_(new Node[16]),
     capacity_(16),
     size_(0)
-  {}
+  {
+  }
 
   template< class Key, class Value >
-  HashTable< Key, Value >::HashTable(const HashTable& other):
+  HashTable< Key, Value >::HashTable(const HashTable& other) :
     table_(new Node[other.capacity_]),
     capacity_(other.capacity_),
     size_(other.size_)
@@ -213,27 +211,27 @@ namespace sogdanov {
   }
 
   template< class Key, class Value >
-  Vec< Key > HashTable< Key, Value >::getKeys() const
+  sogdanov::Vector< Key > HashTable< Key, Value >::getKeys() const
   {
-    Vec< Key > keys;
+    sogdanov::Vector< Key > keys;
     for (std::size_t i = 0; i < capacity_; ++i) {
       if (table_[i].state == State::OCCUPIED) {
-        keys.push_back(table_[i].key);
+        keys.pushBack(table_[i].key);
       }
     }
     return keys;
   }
 
   template< class Key, class Value >
-  Vec< typename HashTable< Key, Value >::Entry > HashTable< Key, Value >::getEntries() const
+  sogdanov::Vector< typename HashTable< Key, Value >::Entry > HashTable< Key, Value >::getEntries() const
   {
-    Vec< Entry > entries;
+    sogdanov::Vector< Entry > entries;
     for (std::size_t i = 0; i < capacity_; ++i) {
       if (table_[i].state == State::OCCUPIED) {
         Entry e;
         e.key = table_[i].key;
         e.value = table_[i].value;
-        entries.push_back(e);
+        entries.pushBack(e);
       }
     }
     return entries;
