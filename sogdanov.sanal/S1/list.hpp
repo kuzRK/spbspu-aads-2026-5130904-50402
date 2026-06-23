@@ -82,10 +82,24 @@ namespace sogdanov {
     bool empty() const noexcept;
     size_t size() const noexcept;
 
+    void splice_after(LIter< T > pos, List< T > &other) noexcept;
+    void splice_after(LIter< T > pos, List< T > &other, LIter< T > it) noexcept;
+    void splice_after(LIter< T > pos, List< T > &other,
+        LIter< T > first, LIter< T > last) noexcept;
+    template< class Compare = std::less< T > >
+    void merge(List< T > &other, Compare comp = Compare()) noexcept;
+    template< class Compare = std::less< T > >
+    void sort(Compare comp = Compare()) noexcept;
+    template< class Pred >
+    List< T > partition(Pred pred) noexcept;
   private:
     Node< T > *head_;
     Node< T > *tail_;
     size_t size_;
+    void splice_chain(Node< T > *pos_node, List< T > &other,
+        Node< T > *prev_node, Node< T > *range_begin,
+        Node< T > *range_end, size_t count) noexcept;
+    List< T > split_half() noexcept;
   };
 
   template< class T >
@@ -365,6 +379,190 @@ namespace sogdanov {
     return size_;
   }
 
+  template< class T >
+  void List< T >::splice_chain(Node< T > *pos_node, List< T > &other,
+      Node< T > *prev_node, Node< T > *range_begin,
+      Node< T > *range_end, size_t count) noexcept
+  {
+    Node< T > *after_range = range_end->next;
+    if (prev_node) {
+      prev_node->next = after_range;
+      if (other.tail_ == range_end) {
+        other.tail_ = prev_node;
+      }
+    } else {
+      other.head_ = after_range;
+      if (!after_range) {
+        other.tail_ = nullptr;
+      }
+    }
+    other.size_ -= count;
+    range_end->next = pos_node->next;
+    pos_node->next = range_begin;
+    if (tail_ == pos_node) {
+      tail_ = range_end;
+    }
+    size_ += count;
+  }
+
+  template< class T >
+  void List< T >::splice_after(LIter< T > pos, List< T > &other) noexcept
+  {
+    if (&other == this || other.empty() || !pos.ptr_) {
+      return;
+    }
+    splice_chain(pos.ptr_, other, nullptr, other.head_, other.tail_, other.size_);
+  }
+
+  template< class T >
+  void List< T >::splice_after(LIter< T > pos, List< T > &other,
+      LIter< T > it) noexcept
+  {
+    if (&other == this || !pos.ptr_ || !it.ptr_ || !it.ptr_->next) {
+      return;
+    }
+    Node< T > *to_move = it.ptr_->next;
+    splice_chain(pos.ptr_, other, it.ptr_, to_move, to_move, 1);
+  }
+
+  template< class T >
+  void List< T >::splice_after(LIter< T > pos, List< T > &other,
+      LIter< T > first, LIter< T > last) noexcept
+  {
+    if (&other == this || !pos.ptr_ || !first.ptr_
+        || first.ptr_->next == last.ptr_) {
+      return;
+    }
+    Node< T > *range_end = first.ptr_->next;
+    size_t count = 1;
+    while (range_end->next != last.ptr_) {
+      range_end = range_end->next;
+      ++count;
+    }
+    splice_chain(pos.ptr_, other, first.ptr_, first.ptr_->next, range_end, count);
+  }
+
+  template< class T >
+  template< class Compare >
+  void List< T >::merge(List< T > &other, Compare comp) noexcept
+  {
+    if (other.empty()) {
+      return;
+    }
+    if (empty()) {
+      *this = std::move(other);
+      return;
+    }
+    Node< T > *a = head_;
+    Node< T > *b = other.head_;
+    Node< T > *result_head;
+    if (!comp(b->data, a->data)) {
+      result_head = a;
+      a = a->next;
+    } else {
+      result_head = b;
+      b = b->next;
+    }
+    Node< T > *result_tail = result_head;
+    while (a && b) {
+      if (!comp(b->data, a->data)) {
+        result_tail->next = a;
+        a = a->next;
+      } else {
+        result_tail->next = b;
+        b = b->next;
+      }
+      result_tail = result_tail->next;
+    }
+    if (a) {
+      result_tail->next = a;
+    } else {
+      result_tail->next = b;
+      tail_ = other.tail_;
+    }
+    head_ = result_head;
+    size_ += other.size_;
+    other.head_ = nullptr;
+    other.tail_ = nullptr;
+    other.size_ = 0;
+  }
+
+  template< class T >
+  List< T > List< T >::split_half() noexcept
+  {
+    if (size_ <= 1) {
+      return List< T >();
+    }
+    size_t half = size_ / 2;
+    Node< T > *cur = head_;
+    for (size_t i = 1; i < half; ++i) {
+      cur = cur->next;
+    }
+    List< T > second;
+    second.head_ = cur->next;
+    second.tail_ = tail_;
+    second.size_ = size_ - half;
+    cur->next = nullptr;
+    tail_ = cur;
+    size_ = half;
+    return second;
+  }
+
+  template< class T >
+  template< class Compare >
+  void List< T >::sort(Compare comp) noexcept
+  {
+    if (size_ <= 1) {
+      return;
+    }
+    List< T > second = split_half();
+    sort(comp);
+    second.sort(comp);
+    merge(second, comp);
+  }
+
+  template< class T >
+  template< class Pred >
+  List< T > List< T >::partition(Pred pred) noexcept
+  {
+    Node< T > *acc_head = nullptr;
+    Node< T > *acc_tail = nullptr;
+    Node< T > *rej_head = nullptr;
+    Node< T > *rej_tail = nullptr;
+    size_t acc_size = 0;
+    size_t rej_size = 0;
+    Node< T > *cur = head_;
+    while (cur) {
+      Node< T > *next = cur->next;
+      cur->next = nullptr;
+      if (pred(cur->data)) {
+        if (acc_tail) {
+          acc_tail->next = cur;
+        } else {
+          acc_head = cur;
+        }
+        acc_tail = cur;
+        ++acc_size;
+      } else {
+        if (rej_tail) {
+          rej_tail->next = cur;
+        } else {
+          rej_head = cur;
+        }
+        rej_tail = cur;
+        ++rej_size;
+      }
+      cur = next;
+    }
+    head_ = acc_head;
+    tail_ = acc_tail;
+    size_ = acc_size;
+    List< T > rejected;
+    rejected.head_ = rej_head;
+    rejected.tail_ = rej_tail;
+    rejected.size_ = rej_size;
+    return rejected;
+  }
 }
 
 #endif
