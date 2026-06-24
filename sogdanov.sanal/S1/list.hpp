@@ -1,6 +1,7 @@
 #ifndef LIST_HPP
 #define LIST_HPP
 
+#include <functional>
 #include <cstddef>
 #include <utility>
 
