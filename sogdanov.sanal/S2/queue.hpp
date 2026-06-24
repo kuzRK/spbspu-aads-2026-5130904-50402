@@ -12,6 +12,8 @@ namespace sogdanov {
   class Queue {
   public:
     void push(const T &v);
+    template< class... Args >
+    void emplace(Args &&... args);
     void pop();
     bool empty() const noexcept;
     size_t size() const noexcept;
@@ -25,6 +27,11 @@ namespace sogdanov {
   void Queue< T >::push(const T &v)
   {
     data_.push_back(v);
+  }
+  template< class... Args >
+  void emplace(Args &&... args)
+  {
+    data_.emplace_back(std::forward< Args >(args)...);
   }
 
   template< class T >
