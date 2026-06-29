@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_drop)
   tree.push(2, 20);
   tree.push(3, 30);
 
-  tree.drop(2); 
+  tree.drop(2);
 
   BOOST_CHECK_EQUAL(tree.get(1), 10);
   BOOST_CHECK_EQUAL(tree.get(3), 30);
