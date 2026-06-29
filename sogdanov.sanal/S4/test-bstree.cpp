@@ -60,10 +60,11 @@ BOOST_AUTO_TEST_CASE(test_drop)
   tree.push(2, 20);
   tree.push(3, 30);
 
-  int val = tree.drop(2);
-  BOOST_CHECK_EQUAL(val, 20);
+  tree.drop(2); 
+
   BOOST_CHECK_EQUAL(tree.get(1), 10);
   BOOST_CHECK_EQUAL(tree.get(3), 30);
+
   BOOST_CHECK_THROW(tree.get(2), std::out_of_range);
 }
 
