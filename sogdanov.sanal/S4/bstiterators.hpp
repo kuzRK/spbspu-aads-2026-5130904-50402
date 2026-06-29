@@ -4,8 +4,12 @@
 #include <utility>
 
 namespace sogdanov {
-  template< class Key, class Value, class Compare >
+
+  template< class Key, class Value, class Compare, bool Multi >
   class BSTree;
+
+  template< class Key, class Value, class Compare, bool Multi >
+  class AVLTree;
 
   template< class Key, class Value >
   struct Node {
@@ -15,6 +19,7 @@ namespace sogdanov {
     Node< Key, Value > *left;
     Node< Key, Value > *right;
     Node< Key, Value > *parent;
+    size_t height;
   };
 
   template< class Key, class Value >
@@ -35,8 +40,11 @@ namespace sogdanov {
 
   private:
     friend class BSTConstIterator< Key, Value >;
-    template< class K, class V, class C >
+    template< class K, class V, class C, bool M >
     friend class BSTree;
+    template< class K, class V, class C, bool M >
+    friend class AVLTree;
+
     Node< Key, Value > *node;
     Node< Key, Value > *fake_leaf;
   };
@@ -56,8 +64,11 @@ namespace sogdanov {
     bool operator!=(const BSTConstIterator< Key, Value > &other) const;
 
   private:
-    template< class K, class V, class C >
+    template< class K, class V, class C, bool M >
     friend class BSTree;
+    template< class K, class V, class C, bool M >
+    friend class AVLTree;
+
     const Node< Key, Value > *node;
     const Node< Key, Value > *fake_leaf;
   };
@@ -67,7 +78,8 @@ namespace sogdanov {
     data(k, v),
     left(nullptr),
     right(nullptr),
-    parent(p)
+    parent(p),
+    height(1)
   {
   }
 
