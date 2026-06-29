@@ -12,6 +12,8 @@ namespace sogdanov {
   template< class Key, class Value, class Compare = std::less< Key > >
   class BSTree {
   public:
+    using node_ptr = Node< Key, Value > *;
+
     BSTree();
     BSTree(const BSTree< Key, Value, Compare > &other);
     ~BSTree();
@@ -24,9 +26,9 @@ namespace sogdanov {
     BSTConstIterator< Key, Value > end() const;
 
     BSTIterator< Key, Value > find(const Key &k);
-    void push(Key k, Value v);
-    Value get(Key k);
-    Value drop(Key k);
+    void push(const Key &k, const Value &v);
+    Value get(const Key &k);
+    void drop(const Key &k);
 
     BSTConstIterator< Key, Value > rotateLeft(BSTConstIterator< Key, Value > it);
     BSTConstIterator< Key, Value > rotateRight(BSTConstIterator< Key, Value > it);
@@ -37,18 +39,28 @@ namespace sogdanov {
     size_t height() const;
 
   private:
-    Node< Key, Value > *root;
-    Node< Key, Value > *fake_leaf;
+    node_ptr root;
+    node_ptr fake_leaf;
     Compare comp;
     size_t tree_size;
 
-    void destroy(Node< Key, Value > *n);
-    Node< Key, Value > *copyTree(const Node< Key, Value > *otherNode, Node< Key, Value > *parent, Node< Key, Value > *otherFake);
-    size_t calculateHeight(Node< Key, Value > *n) const;
+    void swap(BSTree< Key, Value, Compare > &other) noexcept;
+    void destroy(node_ptr n);
+    node_ptr copyTree(const Node< Key, Value > *otherNode, node_ptr parent, node_ptr otherFake);
+    size_t calculateHeight(node_ptr n) const;
   };
 
   template< class Key, class Value, class Compare >
-  void BSTree< Key, Value, Compare >::destroy(Node< Key, Value > *n)
+  void BSTree< Key, Value, Compare >::swap(BSTree< Key, Value, Compare > &other) noexcept
+  {
+    std::swap(root, other.root);
+    std::swap(fake_leaf, other.fake_leaf);
+    std::swap(tree_size, other.tree_size);
+    std::swap(comp, other.comp);
+  }
+
+  template< class Key, class Value, class Compare >
+  void BSTree< Key, Value, Compare >::destroy(node_ptr n)
   {
     if (n != fake_leaf) {
       destroy(n->left);
@@ -58,21 +70,27 @@ namespace sogdanov {
   }
 
   template< class Key, class Value, class Compare >
-  Node< Key, Value > *BSTree< Key, Value, Compare >::copyTree(const Node< Key, Value > *otherNode,
-                                                              Node< Key, Value > *parent,
-                                                              Node< Key, Value > *otherFake)
+  typename BSTree< Key, Value, Compare >::node_ptr
+  BSTree< Key, Value, Compare >::copyTree(const Node< Key, Value > *otherNode, node_ptr parent, node_ptr otherFake)
   {
     if (otherNode == otherFake) {
       return fake_leaf;
     }
-    Node< Key, Value > *newNode = new Node< Key, Value >(otherNode->data.first, otherNode->data.second, parent);
-    newNode->left = copyTree(otherNode->left, newNode, otherFake);
-    newNode->right = copyTree(otherNode->right, newNode, otherFake);
+    node_ptr newNode = new Node< Key, Value >(otherNode->data.first, otherNode->data.second, parent);
+    try {
+      newNode->left = fake_leaf;
+      newNode->right = fake_leaf;
+      newNode->left = copyTree(otherNode->left, newNode, otherFake);
+      newNode->right = copyTree(otherNode->right, newNode, otherFake);
+    } catch (...) {
+      destroy(newNode);
+      throw;
+    }
     return newNode;
   }
 
   template< class Key, class Value, class Compare >
-  size_t BSTree< Key, Value, Compare >::calculateHeight(Node< Key, Value > *n) const
+  size_t BSTree< Key, Value, Compare >::calculateHeight(node_ptr n) const
   {
     if (n == fake_leaf) {
       return 0;
@@ -98,7 +116,12 @@ namespace sogdanov {
     fake_leaf = new Node< Key, Value >(Key(), Value(), nullptr);
     fake_leaf->left = fake_leaf;
     fake_leaf->right = fake_leaf;
-    root = copyTree(other.root, nullptr, other.fake_leaf);
+    try {
+      root = copyTree(other.root, nullptr, other.fake_leaf);
+    } catch (...) {
+      delete fake_leaf;
+      throw;
+    }
   }
 
   template< class Key, class Value, class Compare >
@@ -112,10 +135,8 @@ namespace sogdanov {
   BSTree< Key, Value, Compare > &BSTree< Key, Value, Compare >::operator=(const BSTree< Key, Value, Compare > &other)
   {
     if (this != &other) {
-      destroy(root);
-      root = copyTree(other.root, nullptr, other.fake_leaf);
-      tree_size = other.tree_size;
-      comp = other.comp;
+      BSTree< Key, Value, Compare > tmp(other);
+      swap(tmp);
     }
     return *this;
   }
@@ -129,7 +150,7 @@ namespace sogdanov {
   template< class Key, class Value, class Compare >
   BSTIterator< Key, Value > BSTree< Key, Value, Compare >::begin()
   {
-    Node< Key, Value > *curr = root;
+    node_ptr curr = root;
     while (curr != fake_leaf && curr->left != fake_leaf) {
       curr = curr->left;
     }
@@ -161,7 +182,7 @@ namespace sogdanov {
   template< class Key, class Value, class Compare >
   BSTIterator< Key, Value > BSTree< Key, Value, Compare >::find(const Key &k)
   {
-    Node< Key, Value > *curr = root;
+    node_ptr curr = root;
     while (curr != fake_leaf) {
       if (comp(k, curr->data.first)) {
         curr = curr->left;
@@ -175,7 +196,7 @@ namespace sogdanov {
   }
 
   template< class Key, class Value, class Compare >
-  void BSTree< Key, Value, Compare >::push(Key k, Value v)
+  void BSTree< Key, Value, Compare >::push(const Key &k, const Value &v)
   {
     if (root == fake_leaf) {
       root = new Node< Key, Value >(k, v, nullptr);
@@ -184,8 +205,8 @@ namespace sogdanov {
       tree_size++;
       return;
     }
-    Node< Key, Value > *curr = root;
-    Node< Key, Value > *parent = nullptr;
+    node_ptr curr = root;
+    node_ptr parent = nullptr;
     while (curr != fake_leaf) {
       parent = curr;
       if (comp(k, curr->data.first)) {
@@ -197,7 +218,7 @@ namespace sogdanov {
         return;
       }
     }
-    Node< Key, Value > *newNode = new Node< Key, Value >(k, v, parent);
+    node_ptr newNode = new Node< Key, Value >(k, v, parent);
     newNode->left = fake_leaf;
     newNode->right = fake_leaf;
     if (comp(k, parent->data.first)) {
@@ -209,7 +230,7 @@ namespace sogdanov {
   }
 
   template< class Key, class Value, class Compare >
-  Value BSTree< Key, Value, Compare >::get(Key k)
+  Value BSTree< Key, Value, Compare >::get(const Key &k)
   {
     BSTIterator< Key, Value > it = find(k);
     if (it != end()) {
@@ -219,15 +240,14 @@ namespace sogdanov {
   }
 
   template< class Key, class Value, class Compare >
-  Value BSTree< Key, Value, Compare >::drop(Key k)
+  void BSTree< Key, Value, Compare >::drop(const Key &k)
   {
     BSTIterator< Key, Value > it = find(k);
     if (it == end()) {
       throw std::out_of_range("Key not found");
     }
-    Value val = (*it).second;
 
-    Node< Key, Value > *node = it.node;
+    node_ptr node = it.node;
     if (node->left == fake_leaf && node->right == fake_leaf) {
       if (node->parent != nullptr) {
         if (node->parent->left == node) {
@@ -240,7 +260,7 @@ namespace sogdanov {
       }
       delete node;
     } else if (node->left == fake_leaf || node->right == fake_leaf) {
-      Node< Key, Value > *child = (node->left != fake_leaf) ? node->left : node->right;
+      node_ptr child = (node->left != fake_leaf) ? node->left : node->right;
       child->parent = node->parent;
       if (node->parent != nullptr) {
         if (node->parent->left == node) {
@@ -253,12 +273,12 @@ namespace sogdanov {
       }
       delete node;
     } else {
-      Node< Key, Value > *succ = node->right;
+      node_ptr succ = node->right;
       while (succ->left != fake_leaf) {
         succ = succ->left;
       }
       node->data = succ->data;
-      Node< Key, Value > *child = succ->right;
+      node_ptr child = succ->right;
       if (succ->parent->left == succ) {
         succ->parent->left = child;
       } else {
@@ -270,19 +290,18 @@ namespace sogdanov {
       delete succ;
     }
     tree_size--;
-    return val;
   }
 
   template< class Key, class Value, class Compare >
   BSTConstIterator< Key, Value > BSTree< Key, Value, Compare >::rotateLeft(BSTConstIterator< Key, Value > it)
   {
-    Node< Key, Value > *node = const_cast< Node< Key, Value > * >(it.node);
+    node_ptr node = const_cast< node_ptr >(it.node);
     if (node == fake_leaf || node->parent == nullptr || node->parent->right != node) {
       return it;
     }
 
-    Node< Key, Value > *parent = node->parent;
-    Node< Key, Value > *grand = parent->parent;
+    node_ptr parent = node->parent;
+    node_ptr grand = parent->parent;
 
     parent->right = node->left;
     if (node->left != fake_leaf) {
@@ -308,13 +327,13 @@ namespace sogdanov {
   template< class Key, class Value, class Compare >
   BSTConstIterator< Key, Value > BSTree< Key, Value, Compare >::rotateRight(BSTConstIterator< Key, Value > it)
   {
-    Node< Key, Value > *node = const_cast< Node< Key, Value > * >(it.node);
+    node_ptr node = const_cast< node_ptr >(it.node);
     if (node == fake_leaf || node->parent == nullptr || node->parent->left != node) {
       return it;
     }
 
-    Node< Key, Value > *parent = node->parent;
-    Node< Key, Value > *grand = parent->parent;
+    node_ptr parent = node->parent;
+    node_ptr grand = parent->parent;
 
     parent->left = node->right;
     if (node->right != fake_leaf) {
@@ -340,7 +359,7 @@ namespace sogdanov {
   template< class Key, class Value, class Compare >
   BSTConstIterator< Key, Value > BSTree< Key, Value, Compare >::rotateLargeLeft(BSTConstIterator< Key, Value > it)
   {
-    Node< Key, Value > *node = const_cast< Node< Key, Value > * >(it.node);
+    node_ptr node = const_cast< node_ptr >(it.node);
     if (node == fake_leaf || node->parent == nullptr) {
       return it;
     }
@@ -351,7 +370,7 @@ namespace sogdanov {
   template< class Key, class Value, class Compare >
   BSTConstIterator< Key, Value > BSTree< Key, Value, Compare >::rotateLargeRight(BSTConstIterator< Key, Value > it)
   {
-    Node< Key, Value > *node = const_cast< Node< Key, Value > * >(it.node);
+    node_ptr node = const_cast< node_ptr >(it.node);
     if (node == fake_leaf || node->parent == nullptr) {
       return it;
     }
@@ -362,7 +381,7 @@ namespace sogdanov {
   template< class Key, class Value, class Compare >
   size_t BSTree< Key, Value, Compare >::height(BSTConstIterator< Key, Value > it) const
   {
-    return calculateHeight(const_cast< Node< Key, Value > * >(it.node));
+    return calculateHeight(const_cast< node_ptr >(it.node));
   }
 
   template< class Key, class Value, class Compare >

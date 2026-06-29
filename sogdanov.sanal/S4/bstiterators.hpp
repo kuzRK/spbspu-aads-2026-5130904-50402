@@ -15,7 +15,6 @@ namespace sogdanov {
     Node< Key, Value > *parent;
   };
 
-  // Предварительное объявление для использования в качестве друга
   template< class Key, class Value >
   class BSTConstIterator;
 
