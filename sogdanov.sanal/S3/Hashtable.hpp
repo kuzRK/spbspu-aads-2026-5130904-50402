@@ -1,41 +1,34 @@
 #ifndef HASHTABLE_HPP
 #define HASHTABLE_HPP
 
-#include "HashIter.hpp"
-#include "HashFunc.hpp"
 #include <stdexcept>
 #include <utility>
+#include <functional>
 
-namespace sogdanov
-{
-  enum class HashState
-  {
+#include "HashFunc.hpp"
+#include "HashIter.hpp"
+
+namespace sogdanov {
+
+  enum class HashState {
     EMPTY,
     OCCUPIED,
     TOMBSTONE
   };
-  template <class Key, class Value>
-  struct HashNode
-  {
+
+  template< class Key, class Value >
+  struct HashNode {
     Key k;
     Value v;
     HashState state = HashState::EMPTY;
 
     bool is_occupied() const;
   };
-  template <class Key, class Value, class Hash = XXHashFunctor, class Equal = EqualFunctor<Key>>
-  class HashTable
-  {
-  private:
-    HashNode<Key, Value> *table_;
-    size_t capacity_;
-    size_t size_;
-    size_t tombstones_;
-    Hash hash_fn_;
-    Equal eq_fn_;
 
+  template< class Key, class Value, class Hash = XXHashFunctor, class Equal = EqualFunctor< Key > >
+  class HashTable {
   public:
-    using Iterator = HashIter<HashNode<Key, Value>>;
+    using Iterator = HashIter< HashNode< Key, Value > >;
 
     explicit HashTable(size_t cap = 0);
     HashTable(const HashTable &other);
@@ -43,7 +36,6 @@ namespace sogdanov
     ~HashTable();
 
     void swap(HashTable &other) noexcept;
-
     void add(Key k, Value v);
     Value drop(Key k);
     bool has(Key k) const;
@@ -52,95 +44,161 @@ namespace sogdanov
     void rehash(size_t slots);
     size_t size() const;
 
+    float loadFactor() const;
+    float tombstoneFactor() const;
+    void setMaxLoadFactor(float mlf);
+    void setMaxTombstoneFactor(float mtf);
+    void setRehashPolicy(std::function< size_t(size_t) > policy);
+
     Iterator begin();
     Iterator end();
+
+  private:
+    HashNode< Key, Value > *table_;
+    size_t capacity_;
+    size_t size_;
+    size_t tombstones_;
+    Hash hash_fn_;
+    Equal eq_fn_;
+
+    float max_load_factor_ = 0.75f;
+    float max_tombstone_factor_ = 0.25f;
+    std::function< size_t(size_t) > rehash_policy_;
   };
+
 }
-template <class Key, class Value>
-bool sogdanov::HashNode<Key, Value>::is_occupied() const
+
+template< class Key, class Value >
+bool sogdanov::HashNode< Key, Value >::is_occupied() const
 {
   return state == HashState::OCCUPIED;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-sogdanov::HashTable<Key, Value, Hash, Equal>::HashTable(size_t cap)
-    : table_(nullptr), capacity_(0), size_(0), tombstones_(0)
+template< class Key, class Value, class Hash, class Equal >
+sogdanov::HashTable< Key, Value, Hash, Equal >::HashTable(size_t cap):
+  table_(nullptr),
+  capacity_(0),
+  size_(0),
+  tombstones_(0)
 {
-  if (cap > 0)
-  {
+  if (cap > 0) {
     rehash(cap);
   }
 }
 
-template <class Key, class Value, class Hash, class Equal>
-sogdanov::HashTable<Key, Value, Hash, Equal>::HashTable(const HashTable &other)
-    : table_(nullptr), capacity_(0), size_(0), tombstones_(0)
+template< class Key, class Value, class Hash, class Equal >
+sogdanov::HashTable< Key, Value, Hash, Equal >::HashTable(const HashTable &other):
+  table_(nullptr),
+  capacity_(0),
+  size_(0),
+  tombstones_(0),
+  max_load_factor_(other.max_load_factor_),
+  max_tombstone_factor_(other.max_tombstone_factor_),
+  rehash_policy_(other.rehash_policy_)
 {
-  if (other.capacity_ > 0)
-  {
+  if (other.capacity_ > 0) {
     rehash(other.capacity_);
-    for (size_t i = 0; i < other.capacity_; ++i)
-    {
-      if (other.table_[i].state == HashState::OCCUPIED)
-      {
+    for (size_t i = 0; i < other.capacity_; ++i) {
+      if (other.table_[i].state == HashState::OCCUPIED) {
         add(other.table_[i].k, other.table_[i].v);
       }
     }
   }
 }
 
-template <class Key, class Value, class Hash, class Equal>
-sogdanov::HashTable<Key, Value, Hash, Equal> &
-sogdanov::HashTable<Key, Value, Hash, Equal>::operator=(HashTable other)
+template< class Key, class Value, class Hash, class Equal >
+sogdanov::HashTable< Key, Value, Hash, Equal > &
+sogdanov::HashTable< Key, Value, Hash, Equal >::operator=(HashTable other)
 {
   swap(other);
   return *this;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-sogdanov::HashTable<Key, Value, Hash, Equal>::~HashTable()
+template< class Key, class Value, class Hash, class Equal >
+sogdanov::HashTable< Key, Value, Hash, Equal >::~HashTable()
 {
   delete[] table_;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-void sogdanov::HashTable<Key, Value, Hash, Equal>::swap(HashTable &other) noexcept
+template< class Key, class Value, class Hash, class Equal >
+void sogdanov::HashTable< Key, Value, Hash, Equal >::swap(HashTable &other) noexcept
 {
   std::swap(table_, other.table_);
   std::swap(capacity_, other.capacity_);
   std::swap(size_, other.size_);
   std::swap(tombstones_, other.tombstones_);
+  std::swap(max_load_factor_, other.max_load_factor_);
+  std::swap(max_tombstone_factor_, other.max_tombstone_factor_);
+  std::swap(rehash_policy_, other.rehash_policy_);
 }
 
-template <class Key, class Value, class Hash, class Equal>
-void sogdanov::HashTable<Key, Value, Hash, Equal>::add(Key k, Value v)
+template< class Key, class Value, class Hash, class Equal >
+float sogdanov::HashTable< Key, Value, Hash, Equal >::loadFactor() const
 {
-  if (size_ + tombstones_ >= capacity_)
-  {
-    throw std::overflow_error("HashTable is full, manual rehash required");
+  if (capacity_ == 0) {
+    return 0.0f;
+  }
+  return static_cast< float >(size_) / capacity_;
+}
+
+template< class Key, class Value, class Hash, class Equal >
+float sogdanov::HashTable< Key, Value, Hash, Equal >::tombstoneFactor() const
+{
+  if (capacity_ == 0) {
+    return 0.0f;
+  }
+  return static_cast< float >(tombstones_) / capacity_;
+}
+
+template< class Key, class Value, class Hash, class Equal >
+void sogdanov::HashTable< Key, Value, Hash, Equal >::setMaxLoadFactor(float mlf)
+{
+  max_load_factor_ = mlf;
+}
+
+template< class Key, class Value, class Hash, class Equal >
+void sogdanov::HashTable< Key, Value, Hash, Equal >::setMaxTombstoneFactor(float mtf)
+{
+  max_tombstone_factor_ = mtf;
+}
+
+template< class Key, class Value, class Hash, class Equal >
+void sogdanov::HashTable< Key, Value, Hash, Equal >::setRehashPolicy(std::function< size_t(size_t) > policy)
+{
+  rehash_policy_ = std::move(policy);
+}
+
+template< class Key, class Value, class Hash, class Equal >
+void sogdanov::HashTable< Key, Value, Hash, Equal >::add(Key k, Value v)
+{
+  if (capacity_ == 0 || loadFactor() >= max_load_factor_ || tombstoneFactor() >= max_tombstone_factor_ || size_ + tombstones_ >= capacity_) {
+    size_t new_cap = capacity_ == 0 ? 20 : capacity_ * 2;
+    if (rehash_policy_) {
+      new_cap = rehash_policy_(capacity_);
+    }
+    if (new_cap <= size_) {
+      new_cap = size_ * 2 + 1;
+    }
+    rehash(new_cap);
   }
 
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
   size_t first_tombstone = capacity_;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       table_[idx].v = v;
       return;
     }
-    if (table_[idx].state == HashState::TOMBSTONE && first_tombstone == capacity_)
-    {
+    if (table_[idx].state == HashState::TOMBSTONE && first_tombstone == capacity_) {
       first_tombstone = idx;
     }
     ++i;
-    if (i > capacity_)
-    {
-      if (first_tombstone != capacity_)
-      {
+    if (i > capacity_) {
+      if (first_tombstone != capacity_) {
         break;
       }
       throw std::overflow_error("HashTable probing failed");
@@ -149,8 +207,7 @@ void sogdanov::HashTable<Key, Value, Hash, Equal>::add(Key k, Value v)
 
   size_t target_idx = (first_tombstone != capacity_) ? first_tombstone : (h + i * i) % capacity_;
 
-  if (table_[target_idx].state == HashState::TOMBSTONE)
-  {
+  if (table_[target_idx].state == HashState::TOMBSTONE) {
     tombstones_--;
   }
   table_[target_idx].k = k;
@@ -159,21 +216,19 @@ void sogdanov::HashTable<Key, Value, Hash, Equal>::add(Key k, Value v)
   size_++;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-Value sogdanov::HashTable<Key, Value, Hash, Equal>::drop(Key k)
+template< class Key, class Value, class Hash, class Equal >
+Value sogdanov::HashTable< Key, Value, Hash, Equal >::drop(Key k)
 {
-  if (capacity_ == 0)
-  {
+  if (capacity_ == 0) {
     throw std::out_of_range("Key not found");
   }
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       Value ret = std::move(table_[idx].v);
       table_[idx].state = HashState::TOMBSTONE;
       size_--;
@@ -181,107 +236,97 @@ Value sogdanov::HashTable<Key, Value, Hash, Equal>::drop(Key k)
       return ret;
     }
     ++i;
-    if (i > capacity_)
-    {
+    if (i > capacity_) {
       break;
     }
   }
   throw std::out_of_range("Key not found");
 }
 
-template <class Key, class Value, class Hash, class Equal>
-bool sogdanov::HashTable<Key, Value, Hash, Equal>::has(Key k) const
+template< class Key, class Value, class Hash, class Equal >
+bool sogdanov::HashTable< Key, Value, Hash, Equal >::has(Key k) const
 {
-  if (capacity_ == 0)
-  {
+  if (capacity_ == 0) {
     return false;
   }
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       return true;
     }
     ++i;
-    if (i > capacity_)
-    {
+    if (i > capacity_) {
       break;
     }
   }
   return false;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-Value &sogdanov::HashTable<Key, Value, Hash, Equal>::get(Key k)
+template< class Key, class Value, class Hash, class Equal >
+Value &sogdanov::HashTable< Key, Value, Hash, Equal >::get(Key k)
 {
-  if (capacity_ == 0)
-  {
+  if (capacity_ == 0) {
     throw std::out_of_range("Key not found");
   }
   size_t h = hash_fn_(k) % capacity_;
   size_t i = 0;
 
-  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY)
-  {
+  while (table_[(h + i * i) % capacity_].state != HashState::EMPTY) {
     size_t idx = (h + i * i) % capacity_;
-    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k))
-    {
+
+    if (table_[idx].state == HashState::OCCUPIED && eq_fn_(table_[idx].k, k)) {
       return table_[idx].v;
     }
     ++i;
-    if (i > capacity_)
-    {
+    if (i > capacity_) {
       break;
     }
   }
   throw std::out_of_range("Key not found");
 }
 
-template <class Key, class Value, class Hash, class Equal>
-void sogdanov::HashTable<Key, Value, Hash, Equal>::rehash(size_t slots)
+template< class Key, class Value, class Hash, class Equal >
+void sogdanov::HashTable< Key, Value, Hash, Equal >::rehash(size_t slots)
 {
-  if (slots < size_)
-  {
+  if (slots < size_) {
     throw std::invalid_argument("New capacity too small");
   }
-  HashNode<Key, Value> *old_table = table_;
+  HashNode< Key, Value > *old_table = table_;
   size_t old_cap = capacity_;
 
-  table_ = new HashNode<Key, Value>[slots];
+  table_ = new HashNode< Key, Value >[slots];
   capacity_ = slots;
   size_ = 0;
   tombstones_ = 0;
 
-  for (size_t i = 0; i < old_cap; ++i)
-  {
-    if (old_table[i].state == HashState::OCCUPIED)
-    {
+  for (size_t i = 0; i < old_cap; ++i) {
+    if (old_table[i].state == HashState::OCCUPIED) {
       add(old_table[i].k, old_table[i].v);
     }
   }
   delete[] old_table;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-size_t sogdanov::HashTable<Key, Value, Hash, Equal>::size() const
+template< class Key, class Value, class Hash, class Equal >
+size_t sogdanov::HashTable< Key, Value, Hash, Equal >::size() const
 {
   return size_;
 }
 
-template <class Key, class Value, class Hash, class Equal>
-typename sogdanov::HashTable<Key, Value, Hash, Equal>::Iterator
-sogdanov::HashTable<Key, Value, Hash, Equal>::begin()
+template< class Key, class Value, class Hash, class Equal >
+typename sogdanov::HashTable< Key, Value, Hash, Equal >::Iterator
+sogdanov::HashTable< Key, Value, Hash, Equal >::begin()
 {
   return Iterator(table_, capacity_, 0);
 }
 
-template <class Key, class Value, class Hash, class Equal>
-typename sogdanov::HashTable<Key, Value, Hash, Equal>::Iterator
-sogdanov::HashTable<Key, Value, Hash, Equal>::end()
+template< class Key, class Value, class Hash, class Equal >
+typename sogdanov::HashTable< Key, Value, Hash, Equal >::Iterator
+sogdanov::HashTable< Key, Value, Hash, Equal >::end()
 {
   return Iterator(table_, capacity_, capacity_);
 }

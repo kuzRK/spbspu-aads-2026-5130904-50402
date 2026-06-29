@@ -1,29 +1,26 @@
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
+
 #include "Hashtable.hpp"
 #include "commands.hpp"
 
 int main(int argc, char *argv[])
 {
-  if (argc < 2)
-  {
+  if (argc < 2) {
     std::cerr << "Error: missing filename parameter.\n";
     return 1;
   }
 
-  try
-  {
+  try {
     sogdanov::load_file(argv[1]);
-  }
-  catch (...)
-  {
+  } catch (...) {
     std::cerr << "Error: failed to load file.\n";
     return 1;
   }
 
   using cmd_t = void (*)(std::istream &, std::ostream &);
-  sogdanov::HashTable<std::string, cmd_t> cmds(20);
+  sogdanov::HashTable< std::string, cmd_t > cmds(20);
 
   cmds.add("graphs", sogdanov::cmd_graphs);
   cmds.add("vertexes", sogdanov::cmd_vertexes);
@@ -36,30 +33,23 @@ int main(int argc, char *argv[])
   cmds.add("extract", sogdanov::cmd_extract);
 
   std::string line;
-  while (std::getline(std::cin, line))
-  {
-    if (line.empty())
-    {
+  while (std::getline(std::cin, line)) {
+    if (line.empty()) {
       continue;
     }
 
     std::istringstream iss(line);
     std::string cmd;
-    if (!(iss >> cmd))
-    {
+    if (!(iss >> cmd)) {
       continue;
     }
 
-    try
-    {
-      if (!cmds.has(cmd))
-      {
+    try {
+      if (!cmds.has(cmd)) {
         throw std::out_of_range("Command not found");
       }
       cmds.get(cmd)(iss, std::cout);
-    }
-    catch (...)
-    {
+    } catch (...) {
       std::cout << "<INVALID COMMAND>\n";
     }
   }
