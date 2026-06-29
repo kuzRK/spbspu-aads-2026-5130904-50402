@@ -35,7 +35,8 @@ namespace sogdanov {
 
   private:
     friend class BSTConstIterator< Key, Value >;
-
+    template< class K, class V, class C >
+    friend class BSTree;
     Node< Key, Value > *node;
     Node< Key, Value > *fake_leaf;
   };
@@ -55,6 +56,8 @@ namespace sogdanov {
     bool operator!=(const BSTConstIterator< Key, Value > &other) const;
 
   private:
+    template< class K, class V, class C >
+    friend class BSTree;
     const Node< Key, Value > *node;
     const Node< Key, Value > *fake_leaf;
   };
