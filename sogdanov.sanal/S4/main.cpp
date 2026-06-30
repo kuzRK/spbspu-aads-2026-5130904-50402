@@ -4,7 +4,7 @@
 #include <limits>
 #include <string>
 
-#include "bstree.hpp"
+#include "map.hpp"
 #include "cmd.hpp"
 
 namespace sogdanov {
@@ -54,17 +54,12 @@ int main(int argc, char *argv[])
       int key = std::stoi(token);
       std::string value;
       if (file >> value) {
-        sogdanov::BSTIterator< std::string, sogdanov::Dataset > it = datasets.find(currentDataset);
-        if (it != datasets.end()) {
-          (*it).second.push(key, value);
-        }
+        datasets[currentDataset].insert(key, value);
       }
     } else {
       currentDataset = token;
-      sogdanov::BSTIterator< std::string, sogdanov::Dataset > it = datasets.find(currentDataset);
-      if (it == datasets.end()) {
-        sogdanov::Dataset empty_tree;
-        datasets.push(currentDataset, empty_tree);
+      if (datasets.find(currentDataset) == datasets.end()) {
+        datasets.insert(currentDataset, sogdanov::Dataset());
       }
     }
   }
@@ -72,17 +67,16 @@ int main(int argc, char *argv[])
 
   using cmd_t = void (*)(std::istream &, std::ostream &, sogdanov::Datasets &);
 
-  sogdanov::BSTree< std::string, cmd_t > commands;
+  sogdanov::Map< std::string, cmd_t > commands;
 
-  commands.push("print", sogdanov::cmdPrint);
-  commands.push("complement", sogdanov::cmdComplement);
-  commands.push("intersect", sogdanov::cmdIntersect);
-  commands.push("union", sogdanov::cmdUnion);
+  commands.insert("print", sogdanov::cmdPrint);
+  commands.insert("complement", sogdanov::cmdComplement);
+  commands.insert("intersect", sogdanov::cmdIntersect);
+  commands.insert("union", sogdanov::cmdUnion);
 
   std::string cmd;
   while (std::cin >> cmd) {
-    sogdanov::BSTIterator< std::string, cmd_t > cmd_it = commands.find(cmd);
-
+    sogdanov::Map< std::string, cmd_t >::iterator cmd_it = commands.find(cmd);
     if (cmd_it != commands.end()) {
       (*cmd_it).second(std::cin, std::cout, datasets);
     } else {
@@ -91,5 +85,4 @@ int main(int argc, char *argv[])
       std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
   }
-
 }

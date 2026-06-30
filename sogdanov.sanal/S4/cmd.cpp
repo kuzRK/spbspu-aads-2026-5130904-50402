@@ -10,7 +10,7 @@ namespace sogdanov {
     std::string name;
     in >> name;
 
-    BSTIterator< std::string, Dataset > it = datasets.find(name);
+    Datasets::iterator it = datasets.find(name);
     if (it == datasets.end()) {
       out << "<INVALID COMMAND>\n";
       return;
@@ -23,7 +23,7 @@ namespace sogdanov {
     }
 
     out << name;
-    for (BSTIterator< int, std::string > val_it = tree.begin();
+    for (Dataset::iterator val_it = tree.begin();
          val_it != tree.end(); ++val_it) {
       out << " " << (*val_it).first << " " << (*val_it).second;
     }
@@ -37,8 +37,8 @@ namespace sogdanov {
     std::string d2_name;
     in >> new_name >> d1_name >> d2_name;
 
-    BSTIterator< std::string, Dataset > it1 = datasets.find(d1_name);
-    BSTIterator< std::string, Dataset > it2 = datasets.find(d2_name);
+    Datasets::iterator it1 = datasets.find(d1_name);
+    Datasets::iterator it2 = datasets.find(d2_name);
 
     if (it1 == datasets.end() || it2 == datasets.end()) {
       out << "<INVALID COMMAND>\n";
@@ -46,14 +46,14 @@ namespace sogdanov {
     }
 
     Dataset new_tree;
-    for (BSTIterator< int, std::string > val_it = (*it1).second.begin();
+    for (Dataset::iterator val_it = (*it1).second.begin();
          val_it != (*it1).second.end(); ++val_it) {
       if (it2 == datasets.end() || (*it2).second.find((*val_it).first) == (*it2).second.end()) {
-        new_tree.push((*val_it).first, (*val_it).second);
+        new_tree.insert((*val_it).first, (*val_it).second);
       }
     }
 
-    datasets.push(new_name, new_tree);
+    datasets.insert(new_name, new_tree);
   }
 
   void cmdIntersect(std::istream &in, std::ostream &out, Datasets &datasets)
@@ -63,8 +63,8 @@ namespace sogdanov {
     std::string d2_name;
     in >> new_name >> d1_name >> d2_name;
 
-    BSTIterator< std::string, Dataset > it1 = datasets.find(d1_name);
-    BSTIterator< std::string, Dataset > it2 = datasets.find(d2_name);
+    Datasets::iterator it1 = datasets.find(d1_name);
+    Datasets::iterator it2 = datasets.find(d2_name);
 
     if (it1 == datasets.end() || it2 == datasets.end()) {
       out << "<INVALID COMMAND>\n";
@@ -72,14 +72,14 @@ namespace sogdanov {
     }
 
     Dataset new_tree;
-    for (BSTIterator< int, std::string > val_it = (*it1).second.begin();
+    for (Dataset::iterator val_it = (*it1).second.begin();
          val_it != (*it1).second.end(); ++val_it) {
       if ((*it2).second.find((*val_it).first) != (*it2).second.end()) {
-        new_tree.push((*val_it).first, (*val_it).second);
+        new_tree.insert((*val_it).first, (*val_it).second);
       }
     }
 
-    datasets.push(new_name, new_tree);
+    datasets.insert(new_name, new_tree);
   }
 
   void cmdUnion(std::istream &in, std::ostream &out, Datasets &datasets)
@@ -89,8 +89,8 @@ namespace sogdanov {
     std::string d2_name;
     in >> new_name >> d1_name >> d2_name;
 
-    BSTIterator< std::string, Dataset > it1 = datasets.find(d1_name);
-    BSTIterator< std::string, Dataset > it2 = datasets.find(d2_name);
+    Datasets::iterator it1 = datasets.find(d1_name);
+    Datasets::iterator it2 = datasets.find(d2_name);
 
     if (it1 == datasets.end() || it2 == datasets.end()) {
       out << "<INVALID COMMAND>\n";
@@ -98,21 +98,20 @@ namespace sogdanov {
     }
 
     Dataset new_tree;
-    for (BSTIterator< int, std::string > val_it = (*it1).second.begin();
+    for (Dataset::iterator val_it = (*it1).second.begin();
          val_it != (*it1).second.end(); ++val_it) {
-      new_tree.push((*val_it).first, (*val_it).second);
+      new_tree.insert((*val_it).first, (*val_it).second);
     }
 
     if (it2 != datasets.end()) {
-      for (BSTIterator< int, std::string > val_it = (*it2).second.begin();
+      for (Dataset::iterator val_it = (*it2).second.begin();
            val_it != (*it2).second.end(); ++val_it) {
         if (new_tree.find((*val_it).first) == new_tree.end()) {
-          new_tree.push((*val_it).first, (*val_it).second);
+          new_tree.insert((*val_it).first, (*val_it).second);
         }
       }
     }
 
-    datasets.push(new_name, new_tree);
+    datasets.insert(new_name, new_tree);
   }
-
 }

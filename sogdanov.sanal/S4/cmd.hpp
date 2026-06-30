@@ -4,12 +4,12 @@
 #include <iostream>
 #include <string>
 
-#include "bstree.hpp"
+#include "map.hpp"
 
 namespace sogdanov {
 
-  using Dataset = BSTree< int, std::string >;
-  using Datasets = BSTree< std::string, Dataset >;
+  using Dataset = Map< int, std::string >;
+  using Datasets = Map< std::string, Dataset >;
 
   void cmdPrint(std::istream &in, std::ostream &out, Datasets &datasets);
   void cmdComplement(std::istream &in, std::ostream &out, Datasets &datasets);
